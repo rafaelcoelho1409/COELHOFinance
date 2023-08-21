@@ -1,6 +1,11 @@
 import streamlit as st
 from streamlit_extras.grid import grid
 
+st.set_page_config(
+    page_title = "COELHO Finance - About Us",
+    layout = "wide"
+)
+
 st.title("About")
 
 with st.expander(
