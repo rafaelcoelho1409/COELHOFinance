@@ -1,6 +1,5 @@
 import streamlit as st
 from streamlit_extras.grid import grid
-import webbrowser
 
 st.title("About")
 
@@ -21,16 +20,26 @@ with st.expander(
     technologic areas such as Machine Learning, Deep Learning, Data Science,
     Computer Vision, Reinforcement Learning, NLP and others.<br>
     Actually, he works in one of the Big Four companies for over a year.""", unsafe_allow_html = True)
-    linkedin = row1.button(
-        label = "LinkedIn",
-        use_container_width = True
+    row1.markdown(
+        """
+        <div style='text-align:center; font-size:30px'>
+        <a 
+            href='https://www.linkedin.com/in/rafaelcoelho1409/'>
+                LinkedIn
+        </a>
+        </div>
+        """,
+        unsafe_allow_html = True
     )
-    github = row1.button(
-        label = "GitHub",
-        use_container_width = True
+    row1.markdown(
+        """
+        <div style='text-align:center; font-size:30px'>
+        <a 
+            href='https://github.com/rafaelcoelho1409/'>
+                GitHub
+        </a>
+        </div>
+        """,
+        unsafe_allow_html = True
     )
-    if linkedin:
-        webbrowser.open_new_tab("https://www.linkedin.com/in/rafaelcoelho1409/")
-    if github:
-        webbrowser.open_new_tab("https://www.github.com/rafaelcoelho1409/")
 
