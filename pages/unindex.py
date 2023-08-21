@@ -102,7 +102,10 @@ with st.sidebar:
         index, 
         startdate_filter, 
         enddate_filter)
-currency = ticker.info["currency"]
+try:
+    currency = ticker.info["currency"]
+except:
+    pass
 
 st.write(f"**{index_filter}**")
 
@@ -126,10 +129,12 @@ with main_tabs[0]: #STOCK TAB
             ("Start date", startdate_filter),
             ("End date", enddate_filter)
             ]:
-            grid1.metric(
-                label = key,
-                value = str(value)
-            )
+            try:
+                grid1.metric(
+                    label = key,
+                    value = str(value))
+            except:
+                pass
         style_metric_cards(
             background_color = "#000000",
     )
