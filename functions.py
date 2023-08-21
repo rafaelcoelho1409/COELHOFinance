@@ -1,0 +1,147 @@
+import streamlit as st
+import yfinance as yf
+import datetime as dt
+import pandas as pd
+from streamlit_extras.row import row
+from streamlit_extras.metric_cards import style_metric_cards
+from st_pages import show_pages, Page, Section, add_indentation
+
+@st.cache_resource
+def get_unistock(
+    stock, 
+    startdate_filter,
+    enddate_filter):
+    ticker = yf.Ticker(stock)
+    data = ticker.history(
+        start = startdate_filter,
+        end = enddate_filter
+    )
+    return (
+        ticker, 
+        data)
+
+@st.cache_resource
+def get_unindex(
+    index, 
+    startdate_filter,
+    enddate_filter):
+    ticker = yf.Ticker(index)
+    data = ticker.history(
+        start = startdate_filter,
+        end = enddate_filter
+    )
+    return (
+        ticker, 
+        data)
+
+@st.cache_resource
+def get_profile_report(data):
+    return data.profile_report()
+
+@st.cache_resource
+def get_multistock(stocks, startdate_filter, enddate_filter):
+    tickers = yf.Tickers(stocks)
+    multidata = tickers.history(
+        start = startdate_filter,
+        end = enddate_filter
+    )
+    return tickers, multidata
+
+@st.cache_resource
+def get_multindex(indexes, startdate_filter, enddate_filter):
+    tickers = yf.Tickers(indexes)
+    multidata = tickers.history(
+        start = startdate_filter,
+        end = enddate_filter
+    )
+    return tickers, multidata
+
+def indicator_metrics(
+    pattern, 
+    indicators, 
+    ticker, 
+    items_per_line):
+    metrics = [x for x in indicators.keys() if pattern in x]
+    st.header(pattern.capitalize())
+    rows = row(items_per_line, vertical_align = True)
+    for x in metrics:
+        rows.metric(
+            label = x,
+            value = ticker.info[indicators[x]]
+        )
+    style_metric_cards(
+        background_color = "#000000"
+    )
+
+def general_indicator_metrics(
+    _patterns, 
+    _indicators, 
+    _ticker, 
+    _items_per_line):
+    st.header("General indicators")
+    general_indicators = _indicators.copy()
+    indicators_filtered = {}
+    for key, value in _indicators.items():
+        for pattern in _patterns[1:]:
+            try:
+                if pattern in key:
+                    indicators_filtered[key] = value
+            except:
+                pass
+    for x in _indicators.keys():
+        if x in indicators_filtered.keys():
+            general_indicators.pop(x)
+    rows = row(_items_per_line, vertical_align = True)
+    for x in general_indicators:
+        rows.metric(
+            label = x,
+            value = _ticker.info[_indicators[x]]
+        )
+    style_metric_cards(
+        background_color = "#000000",
+        border_color = "#FF0000"
+    )
+
+def get_news(news):
+    try:
+        news_df = pd.DataFrame(news)
+        news_df = news_df[[
+            "publisher", 
+            "providerPublishTime", 
+            "title",
+            "link",
+            "type",
+            "thumbnail",
+            "relatedTickers"]]
+    except:
+        news_df = news_df[[
+            "publisher", 
+            "providerPublishTime", 
+            "title",
+            "link",
+            "type",
+            "thumbnail"]]  
+    news_df["providerPublishTime"] = news_df["providerPublishTime"].apply(lambda x: dt.datetime.fromtimestamp(x))
+    for x in news_df.iterrows():
+        st.markdown(f"### [{x[1]['title']}]({x[1]['link']})")
+        st.markdown(f"**PUBLISHER:** {x[1]['publisher']}")
+        st.markdown(f"**TIME:** {x[1]['providerPublishTime']}")
+        try:
+            st.markdown(f"**RELATED TICKERS:** {', '.join(y for y in x[1]['relatedTickers'])}")
+        except:
+            pass
+        st.divider()
+
+def option_menu():
+    show_pages([
+        Page("app.py", "COELHO Finance"),
+        Section("Stock Exchange"),
+        Page("pages/unistock.py", "UNISTOCK"),
+        Page("pages/multistock.py", "MULTISTOCK"),
+        Section("Market Index"),
+        Page("pages/unindex.py", "UNINDEX"),
+        Page("pages/multindex.py", "MULTINDEX"),
+        Page("pages/about.py", "About Us", in_section = False),
+    ])
+
+    add_indentation()
