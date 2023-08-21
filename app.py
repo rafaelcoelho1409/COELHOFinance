@@ -84,12 +84,3 @@ more tools in the near future, such as AI-based tools that
 will help you to take the best decisions in the financial market.<b><br><br>
 </div>""", unsafe_allow_html = True)
 st.divider()
-st.markdown("""<div style='font-size:25px'>
-<h3>NEXT STEPS</h3>
-<b>- Return prices</b><br>
-<b>- YahooQuery:</b> Insert data from YahooQuery to complete the available data from YFinance (Python)<br>
-<b>- Anomaly detection:</b> Anomaly detection to detect unusual 
-financial market movement (we are intending to
-create an alarm tool to allow you to configure a personal alert about these movements)<br>
-<b>- Machine Learning predictions:</b> predictions to help you to predict if stock prices and indexes
-will go up or down""", unsafe_allow_html = True)
