@@ -63,7 +63,7 @@ with st.sidebar:
         long_name = market_data[market_data["options"] == stock_filter]["longName"].iloc[0]
         startdate_filter = st.date_input(
             "Start date",
-            dt.datetime.now() - dt.timedelta(days = 30),
+            dt.datetime.now() - dt.timedelta(days = 90),
             key = "startdate_filter"
         )
         enddate_filter = st.date_input(
@@ -144,13 +144,25 @@ with main_tabs[0]: #UNISTOCK TAB
         style_metric_cards(
             background_color = "#000000",
         )
+    checkboxes_grid = grid(4, vertical_align = True)
     fig = go.Figure()
+    for x in ["Open", "High", "Low", "Close"]:
+        if checkboxes_grid.checkbox(x):
+            fig.add_trace(
+                go.Scatter(
+                    x = data.index,
+                    y = data[x],
+                    mode = "lines+markers",
+                    name = x
+                )
+            )
     fig.add_trace(
-        go.Scatter(
+        go.Candlestick(
             x = data.index,
-            y = data[feature_filter],
-            mode = "lines+markers",
-            name = feature_filter,
+            open = data["Open"],
+            high = data["High"],
+            low = data["Low"],
+            close = data["Close"]
         )
     )
     fig.layout.title = stock_filter

@@ -64,7 +64,7 @@ with st.sidebar:
         long_name = index_data[index_data["indexId"] == index]["indexName"]
         startdate_filter = st.date_input(
             "Start date",
-            dt.datetime.now() - dt.timedelta(days = 30),
+            dt.datetime.now() - dt.timedelta(days = 90),
             key = "startdate_filter"
         )
         enddate_filter = st.date_input(
@@ -138,13 +138,30 @@ with main_tabs[0]: #STOCK TAB
         style_metric_cards(
             background_color = "#000000",
     )
+    checkboxes_grid = grid(4, vertical_align = True)
+    cbs = {}
+    cbs["Open"] = checkboxes_grid.checkbox("Open")
+    cbs["High"] = checkboxes_grid.checkbox("High")
+    cbs["Low"] = checkboxes_grid.checkbox("Low")
+    cbs["Close"] = checkboxes_grid.checkbox("Close")
     fig = go.Figure()
+    for x in ["Open", "High", "Low", "Close"]:
+        if checkboxes_grid.checkbox(x):
+            fig.add_trace(
+                go.Scatter(
+                    x = data.index,
+                    y = data[x],
+                    mode = "lines+markers",
+                    name = x
+                )
+            )
     fig.add_trace(
-        go.Scatter(
+        go.Candlestick(
             x = data.index,
-            y = data[feature_filter],
-            mode = "lines+markers",
-            name = feature_filter,
+            open = data["Open"],
+            high = data["High"],
+            low = data["Low"],
+            close = data["Close"]
         )
     )
     fig.layout.title = index_filter
