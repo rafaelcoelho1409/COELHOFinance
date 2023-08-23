@@ -141,6 +141,7 @@ def option_menu():
         Section("Market Index"),
         Page("pages/unindex.py", "UNINDEX"),
         Page("pages/multindex.py", "MULTINDEX"),
+        Page("pages/forex.py", "FOREX", in_section = False),
         Page("pages/about.py", "About Us", in_section = False),
     ])
 

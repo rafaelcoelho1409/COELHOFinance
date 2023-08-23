@@ -9,7 +9,7 @@ st.set_page_config(
 
 option_menu()
 
-st.title("About")
+st.title("About Us")
 
 with st.expander(
     label = "Author",

@@ -122,7 +122,8 @@ with main_tabs[0]: #STOCK TAB
         style_metric_cards(
             background_color = "#000000",
     )
-    checkboxes_grid = grid(4, vertical_align = True)
+    checkboxes_grid = grid(5, vertical_align = True)
+    checkboxes_grid.markdown("**OHLC filters**")
     fig = go.Figure()
     fig.add_trace(
         go.Candlestick(
