@@ -6,6 +6,7 @@ import pandas as pd
 import yfinance as yf
 import plotly.graph_objects as go
 import plotly.express as px
+from plotly.subplots import make_subplots
 #STREAMLIT THIRD-PARTY
 from streamlit_extras.grid import grid
 from streamlit_extras.metric_cards import style_metric_cards
@@ -71,21 +72,6 @@ with st.sidebar:
             dt.datetime.now(),
             key = "enddate_filter"
         )
-        feature_filter = st.selectbox(
-            label = "Feature",
-            placeholder = "Feature",
-            options = [
-                "Open",
-                "High",
-                "Low",
-                "Close",
-                "Volume",
-                "Dividends",
-                "Stock Splits"
-            ],
-            index = 3,
-            key = "feature_filter"
-        )
         search_button = st.form_submit_button(
             label = "Search",
             #key = "search_button",
@@ -128,12 +114,11 @@ with main_tabs[0]: #UNISTOCK TAB
         label = "Indicators",
         expanded = True
     ):
-        grid1 = grid(6, vertical_align = "center")
+        grid1 = grid(5, vertical_align = "center")
         for (key, value) in [
             ("Currency", currency),
             ("Exchange", exchange),
             ("Quote type", quote_type),
-            ("Feature", feature_filter),
             ("Start date", startdate_filter),
             ("End date", enddate_filter)
             ]:
@@ -146,28 +131,68 @@ with main_tabs[0]: #UNISTOCK TAB
         )
     checkboxes_grid = grid(4, vertical_align = True)
     fig = go.Figure()
-    for x in ["Open", "High", "Low", "Close"]:
-        if checkboxes_grid.checkbox(x):
-            fig.add_trace(
-                go.Scatter(
-                    x = data.index,
-                    y = data[x],
-                    mode = "lines+markers",
-                    name = x
-                )
-            )
     fig.add_trace(
         go.Candlestick(
             x = data.index,
             open = data["Open"],
             high = data["High"],
             low = data["Low"],
-            close = data["Close"]
+            close = data["Close"],
         )
     )
-    fig.layout.title = stock_filter
+    for x in ["Open", "High", "Low", "Close"]:
+        if checkboxes_grid.checkbox(x):
+            fig.add_trace(
+                go.Scatter(
+                    x = data.index,
+                    y = data[x],
+                    mode = "lines",
+                    name = x
+                )
+            )
+    fig2 = px.bar(
+        x = data.index,
+        y = data["Volume"]
+    )
+    fig.update_layout(
+        xaxis_rangeslider_visible = False,
+        legend = {
+            "orientation": "h"
+        },
+        title = "<b>(OHLC)</b> " + stock_filter,
+    )
+    fig2.update_layout(
+        height = 200,
+        width = 800,
+        xaxis_title = None,
+        yaxis_title = None,
+        title = "Volume",
+        showlegend = False
+    )
+    fig2.update_traces(
+        marker_color = [
+            '#FF0000' 
+            if row['Open'] - row['Close'] >= 0
+            else '#00FF00' 
+            for index, row in data.iterrows()]
+    )
+    # removing all empty dates
+    # build complete timeline from start date to end date
+    dt_all = pd.date_range(start = data.index[0], end = data.index[-1])
+    # retrieve the dates that ARE in the original datset
+    dt_obs = [d.strftime("%Y-%m-%d") for d in pd.to_datetime(data.index)]
+    # define dates with missing values
+    dt_breaks = [d for d in dt_all.strftime("%Y-%m-%d").tolist() if not d in dt_obs]
+    fig.update_xaxes(
+        rangebreaks=[dict(values=dt_breaks)],
+        automargin = False)
+    fig2.update_xaxes(
+        rangebreaks=[dict(values=dt_breaks)])
     st.plotly_chart(
         fig,
+        use_container_width = True) 
+    st.plotly_chart(
+        fig2,
         use_container_width = True)
 with main_tabs[1]: #INFORMATIONS TAB
     informations = {}
@@ -180,7 +205,7 @@ with main_tabs[1]: #INFORMATIONS TAB
             informations[information] = x
     st.markdown("# Informations")
     info = {}, {}
-    items_per_col = len(informations) // 2
+    items_per_col = len(informations) // 2 
     for i, (key, value) in enumerate(informations.items()):
         try:
             info[(i // items_per_col)][key] = value
