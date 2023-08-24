@@ -1,5 +1,6 @@
 import streamlit as st
 import yfinance as yf
+import yahooquery as yq
 import datetime as dt
 import pandas as pd
 from streamlit_extras.row import row
@@ -10,8 +11,14 @@ from st_pages import show_pages, Page, Section, add_indentation
 def get_unistock(
     stock, 
     period,
-    interval):
-    ticker = yf.Ticker(stock)
+    interval,
+    source):
+    if source == "YFinance":
+        ticker = yf.Ticker(stock)
+    elif source == "YahooQuery":
+        ticker = yq.Ticker(stock)
+    else:
+        raise ValueError("Choose YFinance or YahooQuery as data source")
     data = ticker.history(
         period = period,
         interval = interval
@@ -57,28 +64,41 @@ def get_multindex(indexes, startdate_filter, enddate_filter):
     return tickers, multidata
 
 def indicator_metrics(
+    stock,
     pattern, 
     indicators, 
     ticker, 
-    items_per_line):
+    items_per_line,
+    attribute,
+    source):
     metrics = [x for x in indicators.keys() if pattern in x]
-    st.header(pattern.capitalize())
+    #st.header(pattern.capitalize())
     rows = row(items_per_line, vertical_align = True)
-    for x in metrics:
-        rows.metric(
-            label = x,
-            value = ticker.info[indicators[x]]
-        )
+    if source == "YFinance":
+        for x in metrics:
+            rows.metric(
+                label = x,
+                value = ticker.__getattribute__(attribute)[indicators[x]]
+            )
+    elif source == "YahooQuery":
+        for x in metrics:
+            rows.metric(
+                label = x,
+                value = ticker.__getattribute__(attribute)[stock][indicators[x]]
+            )
     style_metric_cards(
         background_color = "#000000"
     )
 
 def general_indicator_metrics(
+    _stock,
     _patterns, 
     _indicators, 
     _ticker, 
-    _items_per_line):
-    st.header("General indicators")
+    _items_per_line,
+    _attribute,
+    _source):
+    #st.header("General indicators")
     general_indicators = _indicators.copy()
     indicators_filtered = {}
     for key, value in _indicators.items():
@@ -92,11 +112,18 @@ def general_indicator_metrics(
         if x in indicators_filtered.keys():
             general_indicators.pop(x)
     rows = row(_items_per_line, vertical_align = True)
-    for x in general_indicators:
-        rows.metric(
-            label = x,
-            value = _ticker.info[_indicators[x]]
-        )
+    if _source == "YFinance":
+        for x in general_indicators:
+            rows.metric(
+                label = x,
+                value = _ticker.__getattribute__(_attribute)[_indicators[x]]
+            )
+    elif _source == "YahooQuery":
+        for x in general_indicators:
+            rows.metric(
+                label = x,
+                value = _ticker.__getattribute__(_attribute)[_stock][_indicators[x]]
+            )
     style_metric_cards(
         background_color = "#000000",
         border_color = "#FF0000"

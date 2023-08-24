@@ -52,23 +52,23 @@ with st.sidebar:
             if market_button:
                 market_filter = st.session_state["market_filter"]
         with st.form("search_form"):
-            market_data = pd.json_normalize(
+            market_data_yf = pd.json_normalize(
                 json.load(open(f"./data/symbols/{market_filter.lower()}.json", "r")))\
                     .sort_values(by = "symbol")\
                     .reset_index(drop = True)
-            market_data["options"] = market_data["symbol"] + " - " + market_data["longName"] + " (" + market_data["shortName"] + ")"
+            market_data_yf["options"] = market_data_yf["symbol"] + " - " + market_data_yf["longName"] + " (" + market_data_yf["shortName"] + ")"
             stock_filter = st.selectbox(
                 label = f"Stock ({market_filter})",
                 placeholder = "Stock",
-                options = market_data["options"][
-                    market_data["options"].notnull()],
+                options = market_data_yf["options"][
+                    market_data_yf["options"].notnull()],
                 key = "stock_filter"
             )
-            stock = market_data[market_data["options"] == stock_filter]["symbol"].iloc[0]
-            exchange = market_data[market_data["options"] == stock_filter]["exchange"].iloc[0]
-            quote_type = market_data[market_data["options"] == stock_filter]["quoteType"].iloc[0]
-            short_name = market_data[market_data["options"] == stock_filter]["shortName"].iloc[0]
-            long_name = market_data[market_data["options"] == stock_filter]["longName"].iloc[0]
+            stock = market_data_yf[market_data_yf["options"] == stock_filter]["symbol"].iloc[0]
+            exchange = market_data_yf[market_data_yf["options"] == stock_filter]["exchange"].iloc[0]
+            quote_type = market_data_yf[market_data_yf["options"] == stock_filter]["quoteType"].iloc[0]
+            short_name = market_data_yf[market_data_yf["options"] == stock_filter]["shortName"].iloc[0]
+            long_name = market_data_yf[market_data_yf["options"] == stock_filter]["longName"].iloc[0]
             period_filter = st.selectbox(
                 label = "Period",
                 placeholder = "Period",
@@ -95,10 +95,20 @@ with st.sidebar:
 
 (
     ticker_yf, 
-    data) = get_unistock(
+    data_yf) = get_unistock(
         stock, 
         periods_and_intervals[0]["period"][period_filter], 
-        periods_and_intervals[1]["interval"][interval_filter])
+        periods_and_intervals[1]["interval"][interval_filter],
+        "YFinance")
+(
+    ticker_yq,
+    data_yq
+) = get_unistock(
+    stock,
+    periods_and_intervals[0]["period"][period_filter], 
+    periods_and_intervals[1]["interval"][interval_filter],
+    "YahooQuery")
+
 currency = ticker_yf.info["currency"]
 
 st.write(f"**{stock_filter}**")
@@ -107,14 +117,11 @@ main_tabs = st.tabs([
         "UNISTOCK",
         "INFORMATIONS",
         "INDICATORS",
-        "SUMMARY",
+        "COMPANY",
         "NEWS",
         "HOLDERS",
         "DIVIDENDS & SPLITS",
-        "INCOME STATEMENT",
-        "FINANCIALS",
-        "BALANCE SHEET",
-        "CASH FLOW",
+        "FINANCIAL",
         "EARNINGS",
         "SHARES FULL"   
 ])
@@ -142,26 +149,26 @@ with main_tabs[0]: #UNISTOCK TAB
     fig = go.Figure()
     fig.add_trace(
         go.Candlestick(
-            x = data.index,
-            open = data["Open"],
-            high = data["High"],
-            low = data["Low"],
-            close = data["Close"],
+            x = data_yf.index,
+            open = data_yf["Open"],
+            high = data_yf["High"],
+            low = data_yf["Low"],
+            close = data_yf["Close"],
         )
     )
     for x in ["Open", "High", "Low", "Close"]:
         if checkboxes_grid.checkbox(x):
             fig.add_trace(
                 go.Scatter(
-                    x = data.index,
-                    y = data[x],
+                    x = data_yf.index,
+                    y = data_yf[x],
                     mode = "lines",
                     name = x
                 )
             )
     fig2 = px.bar(
-        x = data.index,
-        y = data["Volume"]
+        x = data_yf.index,
+        y = data_yf["Volume"]
     )
     fig.update_layout(
         xaxis_rangeslider_visible = False,
@@ -183,13 +190,13 @@ with main_tabs[0]: #UNISTOCK TAB
             '#FF0000' 
             if row['Open'] - row['Close'] >= 0
             else '#00FF00' 
-            for index, row in data.iterrows()]
+            for index, row in data_yf.iterrows()]
     )
     # removing all empty dates
     # build complete timeline from start date to end date
-    dt_all = pd.date_range(start = data.index[0], end = data.index[-1])
+    dt_all = pd.date_range(start = data_yf.index[0], end = data_yf.index[-1])
     # retrieve the dates that ARE in the original datset
-    dt_obs = [d.strftime("%Y-%m-%d") for d in pd.to_datetime(data.index)]
+    dt_obs = [d.strftime("%Y-%m-%d") for d in pd.to_datetime(data_yf.index)]
     # define dates with missing values
     dt_breaks = [d for d in dt_all.strftime("%Y-%m-%d").tolist() if not d in dt_obs]
     fig.update_xaxes(
@@ -259,26 +266,38 @@ with main_tabs[2]: #INDICATORS TAB
     subtabs = st.tabs(patterns)
     with subtabs[0]:
         general_indicator_metrics(
+            stock,
             patterns,
             indicators,
             ticker_yf,
-            5
+            5,
+            "info",
+            "YFinance"
         )
     for i, x in enumerate(patterns):
         if i != 0: #NOT THE GENERAL TAB
             with subtabs[i]:
                 try:
-                    indicator_metrics(x, indicators, ticker_yf, 5)
+                    indicator_metrics(
+                        stock,
+                        x, 
+                        indicators, 
+                        ticker_yf, 
+                        5,
+                        "info",
+                        "YFinance")
                 except:
                     st.write("No information.")
     #-----------------------
-with main_tabs[3]: #SUMMARY TAB
+with main_tabs[3]: #COMPANY TAB
     tabs = st.tabs([
         "SUMMARY",
-        "COMPANY OFFICERS"
+        "COMPANY OFFICERS",
+        "ESG SCORES",
+        "GRADING HISTORY"
     ])
     with tabs[0]:
-        st.markdown("# SUMMARY")
+        st.markdown("# Summary")
         #This method below was made to avoid the company name to stay apart of the rest of the paragraph
         try:
             join_string = False
@@ -297,11 +316,53 @@ with main_tabs[3]: #SUMMARY TAB
     with tabs[1]:
         st.markdown("# Company Officers")
         try:
-            st.dataframe(
+            st.data_yfframe(
                 ticker_yf.info["companyOfficers"],
                 use_container_width = True)
         except:
             st.write("No information.")
+    with tabs[2]:
+        indicators_num, indicators_str = {}, {}
+        for x in ticker_yq.esg_scores[stock].keys():
+            if type(ticker_yq.esg_scores[stock][x]) in [int, float]:
+                indicator = ''.join(map(
+                    lambda y: y 
+                    if y.islower() 
+                    else " " + y, x)).upper()
+                indicators_num[indicator] = x
+            elif type(ticker_yq.esg_scores[stock][x]) in [str]:
+                indicator = ''.join(map(
+                    lambda y: y 
+                    if y.islower() 
+                    else " " + y, x)).upper()
+                indicators_str[indicator] = x
+        #METRIC CARDS
+        patterns = [
+            "GENERAL INDICATORS",
+        ]
+        st.markdown("# ESG Scores")
+        general_indicator_metrics(
+            stock,
+            patterns,
+            indicators_num,
+            ticker_yq,
+            5,
+            "esg_scores",
+            "YahooQuery"
+        )
+    with tabs[3]:
+        st.markdown("# Grading history")
+        st.data_yfframe(
+            ticker_yq.grading_history,
+            hide_index = True,
+            use_container_width = True)
+        #for i, x in enumerate(patterns):
+        #    if i != 0: #NOT THE GENERAL TAB
+        #        with subtabs[i]:
+        #            try:
+        #                indicator_metrics(x, indicators, ticker_yf, 5)
+        #            except:
+        #                st.write("No information.")
 with main_tabs[4]: #NEWS TAB
     st.title("Latest News")
     try:
@@ -318,7 +379,7 @@ with main_tabs[5]: #HOLDERS TAB
     for i, tab in enumerate(tabs):
         with tab:
             st.markdown(f"# {list(holders_info.values())[i]}")
-            st.dataframe(
+            st.data_yfframe(
                 ticker_yf.__getattribute__(list(holders_info.keys())[i]),
                 hide_index = True,
                 use_container_width = True)
@@ -335,94 +396,25 @@ with main_tabs[6]: #DIV. & SPL. TAB
         with subtabs[i]:
             try:
                 st.markdown(f"# {attr.replace('_', ' ').capitalize()}")
-                st.dataframe(ticker_yf.__getattribute__(attr))
+                st.data_yfframe(ticker_yf.__getattribute__(attr))
             except:
                 st.markdown(f"# {attr.replace('_', ' ').capitalize()}")
-                st.dataframe(ticker_yf.__getattribute__(attr)())
-with main_tabs[7]: #INCOME STATEMENT TAB
-    attrs = [
-        "income_stmt",
-        "quarterly_income_stmt",
-        ]
-    cols = st.columns(2)
-    for i, attr in enumerate(attrs):
-        with cols[i]:
-            st.markdown(f"# {attr.replace('_', ' ').replace('stmt', 'statement').capitalize()}")
-            try:
-                information = ticker_yf.__getattribute__(attr).transpose()
-            except:
-                information = ticker_yf.__getattribute__(attr)().transpose()
-            filterbox = st.selectbox(
-                label = "Feature",
-                options = sorted(information.columns),
-                key = attr
-            )
-            fig = px.bar(
-                information.reset_index(),
-                x = "index",
-                y = filterbox,
-            )
-            fig.layout.showlegend = False
-            st.plotly_chart(fig)
-with main_tabs[8]: #FINANCIALS TAB
+                st.data_yfframe(ticker_yf.__getattribute__(attr)())
+with main_tabs[7]: #FINANCIAL TAB
     attrs = [
         "financials",
+        "income_stmt",
+        "quarterly_income_stmt",
         "quarterly_financials",
-        ]
-    cols = st.columns(2)
-    for i, attr in enumerate(attrs):
-        with cols[i]:
-            st.markdown(f"# {attr.replace('_', ' ').capitalize()}")
-            try:
-                information = ticker_yf.__getattribute__(attr).transpose()
-            except:
-                information = ticker_yf.__getattribute__(attr)().transpose()
-            filterbox = st.selectbox(
-                label = "Feature",
-                options = sorted(information.columns),
-                key = attr
-            )
-            fig = px.bar(
-                information.reset_index(),
-                x = "index",
-                y = filterbox,
-            )
-            fig.layout.showlegend = False
-            st.plotly_chart(fig)
-with main_tabs[9]: #BALANCE SHEET TAB
-    attrs = [
         "balance_sheet",
-        "quarterly_balance_sheet"
-        ]
-    cols = st.columns(2)
-    for i, attr in enumerate(attrs):
-        with cols[i]:
-            st.markdown(f"# {attr.replace('_', ' ').replace('stmt', 'statement').capitalize()}")
-            try:
-                information = ticker_yf.__getattribute__(attr).transpose()
-            except:
-                information = ticker_yf.__getattribute__(attr)().transpose()
-            filterbox = st.selectbox(
-                label = "Feature",
-                options = sorted(information.columns),
-                key = attr
-            )
-            fig = px.bar(
-                information.reset_index(),
-                x = "index",
-                y = filterbox,
-            )
-            fig.layout.showlegend = False
-            st.plotly_chart(fig)
-with main_tabs[10]: #CASH FLOW TAB
-    attrs = [
+        "quarterly_balance_sheet",
         "cash_flow",
         "quarterly_cash_flow"
         ]
-    cols = st.columns(2)
+    subtabs = st.tabs([x.replace("_", " ").upper() for x in attrs])
     for i, attr in enumerate(attrs):
-        with cols[i]:
-            st.markdown(f"# {attr.replace('_', ' ').capitalize()}")
+        with subtabs[i]:
+            st.markdown(f"# {attr.replace('_', ' ').replace('stmt', 'statement').capitalize()}")
             try:
                 information = ticker_yf.__getattribute__(attr).transpose()
             except:
@@ -438,8 +430,10 @@ with main_tabs[10]: #CASH FLOW TAB
                 y = filterbox,
             )
             fig.layout.showlegend = False
-            st.plotly_chart(fig)
-with main_tabs[11]: #EARNING DATES TAB
+            st.plotly_chart(
+                fig,
+                use_container_width = True)
+with main_tabs[8]: #EARNING DATES TAB
     attrs = [
         "earnings_dates"
         ]
@@ -478,7 +472,7 @@ with main_tabs[11]: #EARNING DATES TAB
                     st.plotly_chart(fig)
                 except:
                     st.write("No information.")
-with main_tabs[12]: #FULL SHARES TAB
+with main_tabs[9]: #FULL SHARES TAB
     attrs = [
         "get_shares_full"
         ]
