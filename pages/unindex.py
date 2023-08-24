@@ -1,9 +1,9 @@
 import streamlit as st
 import json
-import re
 import datetime as dt
 import pandas as pd
 import yfinance as yf
+import yahooquery as yq
 import plotly.graph_objects as go
 import plotly.express as px
 #STREAMLIT THIRD-PARTY
@@ -82,15 +82,17 @@ with st.sidebar:
             
 
 (
-    ticker, 
+    ticker_yf, 
     data) = get_unindex(
         index, 
         startdate_filter, 
         enddate_filter)
 try:
-    currency = ticker.info["currency"]
+    currency = ticker_yf.info["currency"]
 except:
     pass
+
+ticker_yf.history()
 
 st.write(f"**{index_filter}**")
 
@@ -190,8 +192,8 @@ with main_tabs[0]: #STOCK TAB
         use_container_width = True)
 with main_tabs[1]: #INFORMATIONS TAB
     informations = {}
-    for x in ticker.info.keys():
-        if (type(ticker.info[x]) in [str]) and (x != "longBusinessSummary"):
+    for x in ticker_yf.info.keys():
+        if (type(ticker_yf.info[x]) in [str]) and (x != "longBusinessSummary"):
             information = ''.join(map(
                 lambda y: y 
                 if y.islower() 
@@ -208,12 +210,12 @@ with main_tabs[1]: #INFORMATIONS TAB
     subcols = st.columns(2)
     for i in range(len(subcols)):
         with subcols[i]:
-            info_markdown = "".join(f"- **{key}:** {ticker.info[value]}\n" for key, value in info[i].items())
+            info_markdown = "".join(f"- **{key}:** {ticker_yf.info[value]}\n" for key, value in info[i].items())
             st.markdown(info_markdown)
 with main_tabs[2]: #INDICATORS TAB
     indicators = {}
-    for x in ticker.info.keys():
-        if type(ticker.info[x]) in [int, float]:
+    for x in ticker_yf.info.keys():
+        if type(ticker_yf.info[x]) in [int, float]:
             indicator = ''.join(map(
                 lambda y: y 
                 if y.islower() 
@@ -246,21 +248,21 @@ with main_tabs[2]: #INDICATORS TAB
         general_indicator_metrics(
             patterns,
             indicators,
-            ticker,
+            ticker_yf,
             5
         )
     for i, x in enumerate(patterns):
         if i != 0: #NOT THE GENERAL TAB
             with subtabs[i]:
                 try:
-                    indicator_metrics(x, indicators, ticker, 5)
+                    indicator_metrics(x, indicators, ticker_yf, 5)
                 except:
                     st.write("No information.")
     #-----------------------
 with main_tabs[3]: #NEWS TAB
     st.title("Latest News")
     try:
-        get_news(ticker.news)
+        get_news(ticker_yf.news)
     except:
         st.write("No information.")
 with main_tabs[4]: #HOLDERS TAB
@@ -274,6 +276,6 @@ with main_tabs[4]: #HOLDERS TAB
         with tab:
             st.markdown(f"# {list(holders_info.values())[i]}")
             st.dataframe(
-                ticker.__getattribute__(list(holders_info.keys())[i]),
+                ticker_yf.__getattribute__(list(holders_info.keys())[i]),
                 hide_index = True,
                 use_container_width = True)

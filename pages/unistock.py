@@ -27,69 +27,79 @@ option_menu()
 
 st.title("COELHO Finance - UNISTOCK")
 
+with open("./data/periods_and_intervals.json", "r") as f:
+    periods_and_intervals = json.load(f)
+
 with st.sidebar:
-    with st.form("market_form"):
-        market_filter = st.selectbox(
-            label = "Market",
-            placeholder = "Market",
-            options = sorted([
-                market["market"].upper()
-                for market 
-                in json.load(open("./data/market_list.json", "r"))]),
-            key = "market_filter"
-        )
-        market_button = st.form_submit_button(
-            label = "Select market",
-            use_container_width = True
-        )
-        if market_button:
-            market_filter = st.session_state["market_filter"]
-    with st.form("search_form"):
-        market_data = pd.json_normalize(
-            json.load(open(f"./data/symbols/{market_filter.lower()}.json", "r")))\
-                .sort_values(by = "symbol")\
-                .reset_index(drop = True)
-        market_data["options"] = market_data["symbol"] + " - " + market_data["longName"] + " (" + market_data["shortName"] + ")"
-        stock_filter = st.selectbox(
-            label = f"Stock ({market_filter})",
-            placeholder = "Stock",
-            options = market_data["options"][
-                market_data["options"].notnull()],
-            key = "stock_filter"
-        )
-        stock = market_data[market_data["options"] == stock_filter]["symbol"].iloc[0]
-        exchange = market_data[market_data["options"] == stock_filter]["exchange"].iloc[0]
-        quote_type = market_data[market_data["options"] == stock_filter]["quoteType"].iloc[0]
-        short_name = market_data[market_data["options"] == stock_filter]["shortName"].iloc[0]
-        long_name = market_data[market_data["options"] == stock_filter]["longName"].iloc[0]
-        startdate_filter = st.date_input(
-            "Start date",
-            dt.datetime.now() - dt.timedelta(days = 90),
-            key = "startdate_filter"
-        )
-        enddate_filter = st.date_input(
-            "End date",
-            dt.datetime.now(),
-            key = "enddate_filter"
-        )
-        search_button = st.form_submit_button(
-            label = "Search",
-            #key = "search_button",
-            use_container_width = True
-        )
-        if search_button:
-            stock = stock
-            startdate_filter = st.session_state["startdate_filter"]
-            enddate_filter = st.session_state["enddate_filter"]
+    with st.expander(
+        "Filters",
+        expanded = True
+    ):
+        with st.form("market_form"):
+            market_filter = st.selectbox(
+                label = "Market",
+                placeholder = "Market",
+                options = sorted([
+                    market["market"].upper()
+                    for market 
+                    in json.load(open("./data/market_list.json", "r"))]),
+                key = "market_filter"
+            )
+            market_button = st.form_submit_button(
+                label = "Select market",
+                use_container_width = True
+            )
+            if market_button:
+                market_filter = st.session_state["market_filter"]
+        with st.form("search_form"):
+            market_data = pd.json_normalize(
+                json.load(open(f"./data/symbols/{market_filter.lower()}.json", "r")))\
+                    .sort_values(by = "symbol")\
+                    .reset_index(drop = True)
+            market_data["options"] = market_data["symbol"] + " - " + market_data["longName"] + " (" + market_data["shortName"] + ")"
+            stock_filter = st.selectbox(
+                label = f"Stock ({market_filter})",
+                placeholder = "Stock",
+                options = market_data["options"][
+                    market_data["options"].notnull()],
+                key = "stock_filter"
+            )
+            stock = market_data[market_data["options"] == stock_filter]["symbol"].iloc[0]
+            exchange = market_data[market_data["options"] == stock_filter]["exchange"].iloc[0]
+            quote_type = market_data[market_data["options"] == stock_filter]["quoteType"].iloc[0]
+            short_name = market_data[market_data["options"] == stock_filter]["shortName"].iloc[0]
+            long_name = market_data[market_data["options"] == stock_filter]["longName"].iloc[0]
+            period_filter = st.selectbox(
+                label = "Period",
+                placeholder = "Period",
+                options = periods_and_intervals[0]["period"],
+                index = 5,
+                key = "period_filter"
+            )
+            interval_filter = st.selectbox(
+                label = "Interval",
+                placeholder = "Interval",
+                options = periods_and_intervals[1]["interval"],
+                index = 8,
+                key = "interval_filter"
+            )
+            search_button = st.form_submit_button(
+                label = "Search",
+                use_container_width = True
+            )
+            if search_button:
+                stock = stock
+                period_interval = st.session_state["period_filter"]
+                interval_filter = st.session_state["interval_filter"]
             
 
 (
-    ticker, 
+    ticker_yf, 
     data) = get_unistock(
         stock, 
-        startdate_filter, 
-        enddate_filter)
-currency = ticker.info["currency"]
+        periods_and_intervals[0]["period"][period_filter], 
+        periods_and_intervals[1]["interval"][interval_filter])
+currency = ticker_yf.info["currency"]
 
 st.write(f"**{stock_filter}**")
 
@@ -105,7 +115,7 @@ main_tabs = st.tabs([
         "FINANCIALS",
         "BALANCE SHEET",
         "CASH FLOW",
-        "EARNINGS DATES",
+        "EARNINGS",
         "SHARES FULL"   
 ])
 
@@ -114,13 +124,11 @@ with main_tabs[0]: #UNISTOCK TAB
         label = "Indicators",
         expanded = True
     ):
-        grid1 = grid(5, vertical_align = "center")
+        grid1 = grid(3, vertical_align = "center")
         for (key, value) in [
             ("Currency", currency),
             ("Exchange", exchange),
             ("Quote type", quote_type),
-            ("Start date", startdate_filter),
-            ("End date", enddate_filter)
             ]:
             grid1.metric(
                 label = key,
@@ -197,8 +205,8 @@ with main_tabs[0]: #UNISTOCK TAB
         use_container_width = True)
 with main_tabs[1]: #INFORMATIONS TAB
     informations = {}
-    for x in ticker.info.keys():
-        if (type(ticker.info[x]) in [str]) and (x != "longBusinessSummary"):
+    for x in ticker_yf.info.keys():
+        if (type(ticker_yf.info[x]) in [str]) and (x != "longBusinessSummary"):
             information = ''.join(map(
                 lambda y: y 
                 if y.islower() 
@@ -215,12 +223,12 @@ with main_tabs[1]: #INFORMATIONS TAB
     subcols = st.columns(2)
     for i in range(len(subcols)):
         with subcols[i]:
-            info_markdown = "".join(f"- **{key}:** {ticker.info[value]}\n" for key, value in info[i].items())
+            info_markdown = "".join(f"- **{key}:** {ticker_yf.info[value]}\n" for key, value in info[i].items())
             st.markdown(info_markdown)
 with main_tabs[2]: #INDICATORS TAB
     indicators = {}
-    for x in ticker.info.keys():
-        if type(ticker.info[x]) in [int, float]:
+    for x in ticker_yf.info.keys():
+        if type(ticker_yf.info[x]) in [int, float]:
             indicator = ''.join(map(
                 lambda y: y 
                 if y.islower() 
@@ -253,14 +261,14 @@ with main_tabs[2]: #INDICATORS TAB
         general_indicator_metrics(
             patterns,
             indicators,
-            ticker,
+            ticker_yf,
             5
         )
     for i, x in enumerate(patterns):
         if i != 0: #NOT THE GENERAL TAB
             with subtabs[i]:
                 try:
-                    indicator_metrics(x, indicators, ticker, 5)
+                    indicator_metrics(x, indicators, ticker_yf, 5)
                 except:
                     st.write("No information.")
     #-----------------------
@@ -274,7 +282,7 @@ with main_tabs[3]: #SUMMARY TAB
         #This method below was made to avoid the company name to stay apart of the rest of the paragraph
         try:
             join_string = False
-            for x in ticker.info["longBusinessSummary"].replace(". ", ".. ").split(". "):
+            for x in ticker_yf.info["longBusinessSummary"].replace(". ", ".. ").split(". "):
                 if x == long_name:
                     join_string = True
                     string_to_be_joined = x
@@ -290,14 +298,14 @@ with main_tabs[3]: #SUMMARY TAB
         st.markdown("# Company Officers")
         try:
             st.dataframe(
-                ticker.info["companyOfficers"],
+                ticker_yf.info["companyOfficers"],
                 use_container_width = True)
         except:
             st.write("No information.")
 with main_tabs[4]: #NEWS TAB
     st.title("Latest News")
     try:
-        get_news(ticker.news)
+        get_news(ticker_yf.news)
     except:
         st.write("No information.")
 with main_tabs[5]: #HOLDERS TAB
@@ -311,7 +319,7 @@ with main_tabs[5]: #HOLDERS TAB
         with tab:
             st.markdown(f"# {list(holders_info.values())[i]}")
             st.dataframe(
-                ticker.__getattribute__(list(holders_info.keys())[i]),
+                ticker_yf.__getattribute__(list(holders_info.keys())[i]),
                 hide_index = True,
                 use_container_width = True)
 with main_tabs[6]: #DIV. & SPL. TAB
@@ -327,10 +335,10 @@ with main_tabs[6]: #DIV. & SPL. TAB
         with subtabs[i]:
             try:
                 st.markdown(f"# {attr.replace('_', ' ').capitalize()}")
-                st.dataframe(ticker.__getattribute__(attr))
+                st.dataframe(ticker_yf.__getattribute__(attr))
             except:
                 st.markdown(f"# {attr.replace('_', ' ').capitalize()}")
-                st.dataframe(ticker.__getattribute__(attr)())
+                st.dataframe(ticker_yf.__getattribute__(attr)())
 with main_tabs[7]: #INCOME STATEMENT TAB
     attrs = [
         "income_stmt",
@@ -341,9 +349,9 @@ with main_tabs[7]: #INCOME STATEMENT TAB
         with cols[i]:
             st.markdown(f"# {attr.replace('_', ' ').replace('stmt', 'statement').capitalize()}")
             try:
-                information = ticker.__getattribute__(attr).transpose()
+                information = ticker_yf.__getattribute__(attr).transpose()
             except:
-                information = ticker.__getattribute__(attr)().transpose()
+                information = ticker_yf.__getattribute__(attr)().transpose()
             filterbox = st.selectbox(
                 label = "Feature",
                 options = sorted(information.columns),
@@ -366,9 +374,9 @@ with main_tabs[8]: #FINANCIALS TAB
         with cols[i]:
             st.markdown(f"# {attr.replace('_', ' ').capitalize()}")
             try:
-                information = ticker.__getattribute__(attr).transpose()
+                information = ticker_yf.__getattribute__(attr).transpose()
             except:
-                information = ticker.__getattribute__(attr)().transpose()
+                information = ticker_yf.__getattribute__(attr)().transpose()
             filterbox = st.selectbox(
                 label = "Feature",
                 options = sorted(information.columns),
@@ -391,9 +399,9 @@ with main_tabs[9]: #BALANCE SHEET TAB
         with cols[i]:
             st.markdown(f"# {attr.replace('_', ' ').replace('stmt', 'statement').capitalize()}")
             try:
-                information = ticker.__getattribute__(attr).transpose()
+                information = ticker_yf.__getattribute__(attr).transpose()
             except:
-                information = ticker.__getattribute__(attr)().transpose()
+                information = ticker_yf.__getattribute__(attr)().transpose()
             filterbox = st.selectbox(
                 label = "Feature",
                 options = sorted(information.columns),
@@ -416,9 +424,9 @@ with main_tabs[10]: #CASH FLOW TAB
         with cols[i]:
             st.markdown(f"# {attr.replace('_', ' ').capitalize()}")
             try:
-                information = ticker.__getattribute__(attr).transpose()
+                information = ticker_yf.__getattribute__(attr).transpose()
             except:
-                information = ticker.__getattribute__(attr)().transpose()
+                information = ticker_yf.__getattribute__(attr)().transpose()
             filterbox = st.selectbox(
                 label = "Feature",
                 options = sorted(information.columns),
@@ -440,7 +448,7 @@ with main_tabs[11]: #EARNING DATES TAB
         with cols[i]:
             st.markdown(f"# {attr.replace('_', ' ').capitalize()}")
             try:
-                information = ticker.__getattribute__(attr).reset_index()
+                information = ticker_yf.__getattribute__(attr).reset_index()
                 filterbox = st.selectbox(
                     label = "Feature",
                     options = sorted(information.columns.drop("Earnings Date")),
@@ -455,7 +463,7 @@ with main_tabs[11]: #EARNING DATES TAB
                 st.plotly_chart(fig)
             except:
                 try:
-                    information = ticker.__getattribute__(attr)().reset_index()
+                    information = ticker_yf.__getattribute__(attr)().reset_index()
                     filterbox = st.selectbox(
                         label = "Feature",
                         options = information.columns.drop("Earnings Date"),
@@ -479,7 +487,7 @@ with main_tabs[12]: #FULL SHARES TAB
         with cols[i]:
             st.markdown(f"# {attr.replace('_', ' ').capitalize()}")
             try:
-                information = ticker.__getattribute__(attr).transpose()
+                information = ticker_yf.__getattribute__(attr).transpose()
                 fig = px.bar(
                     information.reset_index(),
                     x = "index",
@@ -489,7 +497,7 @@ with main_tabs[12]: #FULL SHARES TAB
                 st.plotly_chart(fig)
             except:
                 try:
-                    information = ticker.__getattribute__(attr)().transpose()
+                    information = ticker_yf.__getattribute__(attr)().transpose()
                     fig = px.bar(
                         information.reset_index(),
                         x = "index",

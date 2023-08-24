@@ -9,12 +9,12 @@ from st_pages import show_pages, Page, Section, add_indentation
 @st.cache_resource
 def get_unistock(
     stock, 
-    startdate_filter,
-    enddate_filter):
+    period,
+    interval):
     ticker = yf.Ticker(stock)
     data = ticker.history(
-        start = startdate_filter,
-        end = enddate_filter
+        period = period,
+        interval = interval
     )
     return (
         ticker, 
