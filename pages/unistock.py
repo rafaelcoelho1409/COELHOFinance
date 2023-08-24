@@ -233,95 +233,74 @@ with main_tabs[1]: #INFORMATIONS TAB
             info_markdown = "".join(f"- **{key}:** {ticker_yf.info[value]}\n" for key, value in info[i].items())
             st.markdown(info_markdown)
 with main_tabs[2]: #INDICATORS TAB
-    indicators = {}
-    for x in ticker_yf.info.keys():
-        if type(ticker_yf.info[x]) in [int, float]:
-            indicator = ''.join(map(
-                lambda y: y 
-                if y.islower() 
-                else " " + y, x)).upper()
-            indicators[indicator] = x
-    st.markdown("# MAIN INDICATORS")
-    #METRIC CARDS
-    patterns = [
-        "GENERAL INDICATORS",
-        "RISK",
-        "MARKET",
-        "DIVIDEND",
-        "VOLUME",
-        "SHARE",
-        "DATE",
-        "EPOCH",
-        "DAY",
-        "PRICE",
-        "RATIO",
-        "AVERAGE",
-        "TRAILING",
-        "FORWARD",
-        "PERCENT",
-        "FISCAL",
-        "QUARTER",
-        "ENTERPRISE"
-    ]
-    subtabs = st.tabs(patterns)
-    with subtabs[0]:
-        general_indicator_metrics(
-            stock,
-            patterns,
-            indicators,
-            ticker_yf,
-            5,
-            "info",
-            "YFinance"
-        )
-    for i, x in enumerate(patterns):
-        if i != 0: #NOT THE GENERAL TAB
-            with subtabs[i]:
-                try:
-                    indicator_metrics(
-                        stock,
-                        x, 
-                        indicators, 
-                        ticker_yf, 
-                        5,
-                        "info",
-                        "YFinance")
-                except:
-                    st.write("No information.")
-    #-----------------------
-with main_tabs[3]: #COMPANY TAB
-    tabs = st.tabs([
-        "SUMMARY",
-        "COMPANY OFFICERS",
+    subtab_names = [
+        "MAIN INDICATORS",
         "ESG SCORES",
-        "GRADING HISTORY"
-    ])
-    with tabs[0]:
-        st.markdown("# Summary")
-        #This method below was made to avoid the company name to stay apart of the rest of the paragraph
-        try:
-            join_string = False
-            for x in ticker_yf.info["longBusinessSummary"].replace(". ", ".. ").split(". "):
-                if x == long_name:
-                    join_string = True
-                    string_to_be_joined = x
-                    continue
-                if join_string:
-                    st.markdown(f"- {string_to_be_joined} {x}")
-                    join_string = False
-                else:
-                    st.markdown(f"- {x}")
-        except:
-            st.write("No information.")
-    with tabs[1]:
-        st.markdown("# Company Officers")
-        try:
-            st.dataframe(
-                ticker_yf.info["companyOfficers"],
-                use_container_width = True)
-        except:
-            st.write("No information.")
-    with tabs[2]:
+        "GRADING HISTORY",
+        "INSTITUTIONAL OWNERSHIP",
+        "KEY STATS",
+        "PRICE",
+        "SEC FILINGS",
+        "SHARE PURCHASE ACTIVITY"
+    ]
+    subtabs = st.tabs(subtab_names)
+    with subtabs[0]:
+        indicators = {}
+        for x in ticker_yf.info.keys():
+            if type(ticker_yf.info[x]) in [int, float]:
+                indicator = ''.join(map(
+                    lambda y: y 
+                    if y.islower() 
+                    else " " + y, x)).upper()
+                indicators[indicator] = x
+        st.markdown("# MAIN INDICATORS")
+        #METRIC CARDS
+        patterns = [
+            "GENERAL INDICATORS",
+            "RISK",
+            "MARKET",
+            "DIVIDEND",
+            "VOLUME",
+            "SHARE",
+            "DATE",
+            "EPOCH",
+            "DAY",
+            "PRICE",
+            "RATIO",
+            "AVERAGE",
+            "TRAILING",
+            "FORWARD",
+            "PERCENT",
+            "FISCAL",
+            "QUARTER",
+            "ENTERPRISE"
+        ]
+        subsubtabs = st.tabs(patterns)
+        with subsubtabs[0]:
+            general_indicator_metrics(
+                stock,
+                patterns,
+                indicators,
+                ticker_yf,
+                5,
+                "info",
+                "YFinance"
+            )
+        for i, x in enumerate(patterns):
+            if i != 0: #NOT THE GENERAL TAB
+                with subsubtabs[i]:
+                    try:
+                        indicator_metrics(
+                            stock,
+                            x, 
+                            indicators, 
+                            ticker_yf, 
+                            5,
+                            "info",
+                            "YFinance")
+                    except:
+                        st.write("No information.")
+    with subtabs[1]:
         indicators_num, indicators_str = {}, {}
         for x in ticker_yq.esg_scores[stock].keys():
             if type(ticker_yq.esg_scores[stock][x]) in [int, float]:
@@ -350,19 +329,166 @@ with main_tabs[3]: #COMPANY TAB
             "esg_scores",
             "YahooQuery"
         )
-    with tabs[3]:
+    with subtabs[2]:
         st.markdown("# Grading history")
         st.dataframe(
             ticker_yq.grading_history,
             hide_index = True,
             use_container_width = True)
-        #for i, x in enumerate(patterns):
-        #    if i != 0: #NOT THE GENERAL TAB
-        #        with subtabs[i]:
-        #            try:
-        #                indicator_metrics(x, indicators, ticker_yf, 5)
-        #            except:
-        #                st.write("No information.")
+    with subtabs[3]:
+        st.markdown("# Institutional ownership")
+        st.dataframe(
+            ticker_yq.institution_ownership,
+            hide_index = True,
+            use_container_width = True)
+    with subtabs[4]:
+        indicators_num, indicators_str = {}, {}
+        for x in ticker_yq.key_stats[stock].keys():
+            if type(ticker_yq.key_stats[stock][x]) in [int, float]:
+                indicator = ''.join(map(
+                    lambda y: y 
+                    if y.islower() 
+                    else " " + y, x)).upper()
+                indicators_num[indicator] = x
+            elif type(ticker_yq.key_stats[stock][x]) in [str]:
+                indicator = ''.join(map(
+                    lambda y: y 
+                    if y.islower() 
+                    else " " + y, x)).upper()
+                indicators_str[indicator] = x
+        #METRIC CARDS
+        patterns = [
+            "GENERAL INDICATORS",
+        ]
+        st.markdown("# Key stats")
+        subsubtabs = st.tabs([
+            "MAIN INDICATORS",
+            "MAIN INFORMATIONS"
+        ])
+        with subsubtabs[0]:
+            general_indicator_metrics(
+                stock,
+                patterns,
+                indicators_num,
+                ticker_yq,
+                5,
+                "key_stats",
+                "YahooQuery"
+            )
+        with subsubtabs[1]:
+            general_indicator_metrics(
+                stock,
+                patterns,
+                indicators_str,
+                ticker_yq,
+                5,
+                "key_stats",
+                "YahooQuery"
+            )
+    with subtabs[5]:
+        indicators_num, indicators_str = {}, {}
+        for x in ticker_yq.price[stock].keys():
+            if type(ticker_yq.price[stock][x]) in [int, float]:
+                indicator = ''.join(map(
+                    lambda y: y 
+                    if y.islower() 
+                    else " " + y, x)).upper()
+                indicators_num[indicator] = x
+            elif type(ticker_yq.price[stock][x]) in [str]:
+                indicator = ''.join(map(
+                    lambda y: y 
+                    if y.islower() 
+                    else " " + y, x)).upper()
+                indicators_str[indicator] = x
+        #METRIC CARDS
+        patterns = [
+            "GENERAL INDICATORS",
+        ]
+        st.markdown("# Price")
+        subsubtabs = st.tabs([
+            "MAIN INDICATORS",
+            "MAIN INFORMATIONS"
+        ])
+        with subsubtabs[0]:
+            general_indicator_metrics(
+                stock,
+                patterns,
+                indicators_num,
+                ticker_yq,
+                5,
+                "price",
+                "YahooQuery"
+            )
+        with subsubtabs[1]:
+            general_indicator_metrics(
+                stock,
+                patterns,
+                indicators_str,
+                ticker_yq,
+                5,
+                "price",
+                "YahooQuery"
+            )   
+    with subtabs[6]:
+        st.markdown("# SEC Filings")
+        st.dataframe(
+            ticker_yq.sec_filings,
+            hide_index = True,
+            use_container_width = True
+        )
+    with subtabs[7]:
+        indicators = {}
+        for x in ticker_yq.share_purchase_activity[stock].keys():
+            if type(ticker_yq.share_purchase_activity[stock][x]) in [int, float, str]:
+                indicator = ''.join(map(
+                    lambda y: y 
+                    if y.islower() 
+                    else " " + y, x)).upper()
+                indicators[indicator] = x
+        #METRIC CARDS
+        patterns = [
+            "GENERAL INDICATORS",
+        ]
+        st.markdown("# Share purchase activity")
+        general_indicator_metrics(
+            stock,
+            patterns,
+            indicators,
+            ticker_yq,
+            5,
+            "share_purchase_activity",
+            "YahooQuery"
+        )
+with main_tabs[3]: #COMPANY TAB
+    tabs = st.tabs([
+        "SUMMARY",
+        "COMPANY OFFICERS",
+    ])
+    with tabs[0]:
+        st.markdown("# Summary")
+        #This method below was made to avoid the company name to stay apart of the rest of the paragraph
+        try:
+            join_string = False
+            for x in ticker_yf.info["longBusinessSummary"].replace(". ", ".. ").split(". "):
+                if x == long_name:
+                    join_string = True
+                    string_to_be_joined = x
+                    continue
+                if join_string:
+                    st.markdown(f"- {string_to_be_joined} {x}")
+                    join_string = False
+                else:
+                    st.markdown(f"- {x}")
+        except:
+            st.write("No information.")
+    with tabs[1]:
+        st.markdown("# Company Officers")
+        try:
+            st.dataframe(
+                ticker_yf.info["companyOfficers"],
+                use_container_width = True)
+        except:
+            st.write("No information.")
 with main_tabs[4]: #NEWS TAB
     st.title("Latest News")
     try:
