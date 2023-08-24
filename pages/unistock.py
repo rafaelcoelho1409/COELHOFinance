@@ -241,7 +241,9 @@ with main_tabs[2]: #INDICATORS TAB
         "KEY STATS",
         "PRICE",
         "SEC FILINGS",
-        "SHARE PURCHASE ACTIVITY"
+        "SHARE PURCHASE ACTIVITY",
+        "QUOTES",
+        "RECOMMENDATIONS"
     ]
     subtabs = st.tabs(subtab_names)
     with subtabs[0]:
@@ -331,10 +333,13 @@ with main_tabs[2]: #INDICATORS TAB
         )
     with subtabs[2]:
         st.markdown("# Grading history")
-        st.dataframe(
-            ticker_yq.grading_history,
-            hide_index = True,
-            use_container_width = True)
+        try:
+            st.dataframe(
+                ticker_yq.grading_history,
+                hide_index = True,
+                use_container_width = True)
+        except:
+            st.write("No informations.")
     with subtabs[3]:
         st.markdown("# Institutional ownership")
         st.dataframe(
@@ -431,11 +436,14 @@ with main_tabs[2]: #INDICATORS TAB
             )   
     with subtabs[6]:
         st.markdown("# SEC Filings")
-        st.dataframe(
-            ticker_yq.sec_filings,
-            hide_index = True,
-            use_container_width = True
-        )
+        try:
+            st.dataframe(
+                ticker_yq.sec_filings,
+                hide_index = True,
+                use_container_width = True
+            )
+        except:
+            st.write("No informations.")
     with subtabs[7]:
         indicators = {}
         for x in ticker_yq.share_purchase_activity[stock].keys():
@@ -459,6 +467,16 @@ with main_tabs[2]: #INDICATORS TAB
             "share_purchase_activity",
             "YahooQuery"
         )
+    with subtabs[8]:
+        st.markdown("# Quotes")
+        try:
+            st.write(ticker_yq.quotes)
+        except:
+            st.write("No informations.")
+    with subtabs[9]:
+        st.dataframe(
+            ticker_yq.recommendations[stock]["recommendedSymbols"],
+            use_container_width = True)
 with main_tabs[3]: #COMPANY TAB
     tabs = st.tabs([
         "SUMMARY",
