@@ -316,7 +316,7 @@ with main_tabs[3]: #COMPANY TAB
     with tabs[1]:
         st.markdown("# Company Officers")
         try:
-            st.data_yfframe(
+            st.dataframe(
                 ticker_yf.info["companyOfficers"],
                 use_container_width = True)
         except:
@@ -352,7 +352,7 @@ with main_tabs[3]: #COMPANY TAB
         )
     with tabs[3]:
         st.markdown("# Grading history")
-        st.data_yfframe(
+        st.dataframe(
             ticker_yq.grading_history,
             hide_index = True,
             use_container_width = True)
@@ -379,7 +379,7 @@ with main_tabs[5]: #HOLDERS TAB
     for i, tab in enumerate(tabs):
         with tab:
             st.markdown(f"# {list(holders_info.values())[i]}")
-            st.data_yfframe(
+            st.dataframe(
                 ticker_yf.__getattribute__(list(holders_info.keys())[i]),
                 hide_index = True,
                 use_container_width = True)
@@ -396,10 +396,10 @@ with main_tabs[6]: #DIV. & SPL. TAB
         with subtabs[i]:
             try:
                 st.markdown(f"# {attr.replace('_', ' ').capitalize()}")
-                st.data_yfframe(ticker_yf.__getattribute__(attr))
+                st.dataframe(ticker_yf.__getattribute__(attr))
             except:
                 st.markdown(f"# {attr.replace('_', ' ').capitalize()}")
-                st.data_yfframe(ticker_yf.__getattribute__(attr)())
+                st.dataframe(ticker_yf.__getattribute__(attr)())
 with main_tabs[7]: #FINANCIAL TAB
     attrs = [
         "financials",
