@@ -1,6 +1,7 @@
 pandas==2.0.2
 plotly==5.14.1
-st_pages==0.4.3
+st_pages==0.4.4
 streamlit==1.25.0
 streamlit_extras==0.3.0
+yahooquery==2.3.2
 yfinance==0.2.26

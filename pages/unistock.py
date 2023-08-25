@@ -393,26 +393,29 @@ with main_tabs[2]: #INDICATORS TAB
     with subtabs[5]:
         indicators_num, indicators_str = {}, {}
         for x in ticker_yq.price[stock].keys():
-            if type(ticker_yq.price[stock][x]) in [int, float]:
-                indicator = ''.join(map(
-                    lambda y: y 
-                    if y.islower() 
-                    else " " + y, x)).upper()
-                indicators_num[indicator] = x
-            elif type(ticker_yq.price[stock][x]) in [str]:
-                indicator = ''.join(map(
-                    lambda y: y 
-                    if y.islower() 
-                    else " " + y, x)).upper()
-                indicators_str[indicator] = x
+            try:
+                if type(ticker_yq.price[stock][x]) in [int, float]:
+                    indicator = ''.join(map(
+                        lambda y: y 
+                        if y.islower() 
+                        else " " + y, x)).upper()
+                    indicators_num[indicator] = x
+                elif type(ticker_yq.price[stock][x]) in [str]:
+                    indicator = ''.join(map(
+                        lambda y: y 
+                        if y.islower() 
+                        else " " + y, x)).upper()
+                    indicators_str[indicator] = x
+            except:
+                pass
         #METRIC CARDS
         patterns = [
             "GENERAL INDICATORS",
         ]
         st.markdown("# Price")
         subsubtabs = st.tabs([
-            "MAIN INDICATORS",
-            "MAIN INFORMATIONS"
+            "Main Indicators",
+            "Main Informations"
         ])
         with subsubtabs[0]:
             general_indicator_metrics(
@@ -425,20 +428,38 @@ with main_tabs[2]: #INDICATORS TAB
                 "YahooQuery"
             )
         with subsubtabs[1]:
-            general_indicator_metrics(
-                stock,
-                patterns,
-                indicators_str,
-                ticker_yq,
-                5,
-                "price",
-                "YahooQuery"
-            )   
+            informations = {}
+            for x in ticker_yq.price[stock].keys():
+                information = ''.join(map(
+                    lambda y: str(y) 
+                    if str(y).islower() 
+                    else " " + str(y), str(x))).upper()
+                if type(ticker_yq.price[stock][x]) in [str]:
+                    informations[information] = x
+            st.markdown("# Main informations")
+            info = {}, {}
+            items_per_col = len(informations) // 2 
+            for i, (key, value) in enumerate(informations.items()):
+                try:
+                    info[(i // items_per_col)][key] = value
+                except:
+                    pass
+            subcols = st.columns(2)
+            for i in range(len(subcols)):
+                with subcols[i]:
+                    info_markdown = "".join(f"- **{key}:** {ticker_yq.price[stock][value]}\n" for key, value in info[i].items())
+                    st.markdown(info_markdown)
     with subtabs[6]:
         st.markdown("# SEC Filings")
         try:
+            sec_filings = ticker_yq.sec_filings.reset_index()
+            sec_filings_exhibits = pd.json_normalize(sec_filings["exhibits"])
+            sec_filings_final = pd.concat([
+                sec_filings.drop("exhibits", axis = 1),
+                sec_filings_exhibits
+            ], axis = 1)
             st.dataframe(
-                ticker_yq.sec_filings,
+                sec_filings_final,
                 hide_index = True,
                 use_container_width = True
             )
@@ -545,28 +566,31 @@ with main_tabs[6]: #DIV. & SPL. TAB
                 st.markdown(f"# {attr.replace('_', ' ').capitalize()}")
                 st.dataframe(ticker_yf.__getattribute__(attr)())
 with main_tabs[7]: #FINANCIAL TAB
-    attrs = [
-        "financials",
-        "income_stmt",
-        "quarterly_income_stmt",
-        "quarterly_financials",
-        "balance_sheet",
-        "quarterly_balance_sheet",
-        "cash_flow",
-        "quarterly_cash_flow"
-        ]
-    subtabs = st.tabs([x.replace("_", " ").upper() for x in attrs])
-    for i, attr in enumerate(attrs):
-        with subtabs[i]:
-            st.markdown(f"# {attr.replace('_', ' ').replace('stmt', 'statement').capitalize()}")
-            try:
-                information = ticker_yf.__getattribute__(attr).transpose()
-            except:
-                information = ticker_yf.__getattribute__(attr)().transpose()
+    subtab_names = [
+        "FINANCIALS",
+        "INCOME STATEMENT",
+        "BALANCE SHEET",
+        "CASH FLOW",
+        "HOLDERS",
+        "EARNINGS",
+        "VALUATION MEASURES",
+        "SHARES FULL",
+        "DIVIDENDS & SPLITS"
+    ]
+    subtabs = st.tabs(subtab_names)
+    with subtabs[0]:
+        subsubtabs = st.tabs([
+            "Financials",
+            "Quarterly Financials",
+            "Financial Data"
+        ])
+        with subsubtabs[0]:
+            st.markdown("# Financials")
+            information = ticker_yf.financials.transpose()
             filterbox = st.selectbox(
                 label = "Feature",
                 options = sorted(information.columns),
-                key = attr
+                key = "financials_fb"
             )
             fig = px.bar(
                 information.reset_index(),
@@ -577,6 +601,91 @@ with main_tabs[7]: #FINANCIAL TAB
             st.plotly_chart(
                 fig,
                 use_container_width = True)
+        with subsubtabs[1]:
+            st.markdown("# Quarterly financials")
+            information = ticker_yf.quarterly_financials.transpose()
+            filterbox = st.selectbox(
+                label = "Feature",
+                options = sorted(information.columns),
+                key = "quarterly_financials_fb"
+            )
+            fig = px.bar(
+                information.reset_index(),
+                x = "index",
+                y = filterbox,
+            )
+            fig.layout.showlegend = False
+            st.plotly_chart(
+                fig,
+                use_container_width = True)
+        with subsubtabs[2]:
+            informations = {}
+            for x in ticker_yq.financial_data[stock].keys():
+                information = ''.join(map(
+                    lambda y: str(y) 
+                    if str(y).islower() 
+                    else " " + str(y), str(x))).upper()
+                informations[information] = x
+            st.markdown("# Financial data")
+            info = {}, {}
+            items_per_col = len(informations) // 2 
+            for i, (key, value) in enumerate(informations.items()):
+                try:
+                    info[(i // items_per_col)][key] = value
+                except:
+                    pass
+            subcols = st.columns(2)
+            for i in range(len(subcols)):
+                with subcols[i]:
+                    info_markdown = "".join(f"- **{key}:** {ticker_yq.financial_data[stock][value]}\n" for key, value in info[i].items())
+                    st.markdown(info_markdown)
+    with subtabs[1]:
+        subsubtabs = st.tabs([
+            "Income Statement",
+            "Quarterly Income Statement",
+            "Income Statement Data"
+        ])
+        with subsubtabs[0]:
+            st.markdown("# Income Statement")
+            information = ticker_yf.income_stmt.transpose()
+            filterbox = st.selectbox(
+                label = "Feature",
+                options = sorted(information.columns),
+                key = "income_stmt_fb"
+            )
+            fig = px.bar(
+                information.reset_index(),
+                x = "index",
+                y = filterbox,
+            )
+            fig.layout.showlegend = False
+            st.plotly_chart(
+                fig,
+                use_container_width = True)
+        with subsubtabs[1]:
+            st.markdown("# Quarterly Income Statement")
+            information = ticker_yf.income_stmt.transpose()
+            filterbox = st.selectbox(
+                label = "Feature",
+                options = sorted(information.columns),
+                key = "quarterly_income_stmt_fb"
+            )
+            fig = px.bar(
+                information.reset_index(),
+                x = "index",
+                y = filterbox,
+            )
+            fig.layout.showlegend = False
+            st.plotly_chart(
+                fig,
+                use_container_width = True)
+        with subsubtabs[2]:
+            st.markdown("# Income Statement Data")
+            st.dataframe(
+                ticker_yq.income_statement().reset_index().transpose().reset_index(),
+                hide_index = True,
+                use_container_width = True
+            )
 with main_tabs[8]: #EARNING DATES TAB
     attrs = [
         "earnings_dates"
