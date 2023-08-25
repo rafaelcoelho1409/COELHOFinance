@@ -965,9 +965,33 @@ with main_tabs[5]: #FINANCIAL TAB
             )
 with main_tabs[6]:
     st.markdown("# Technical Insights")
-    for x in ticker_yq.technical_insights[stock].keys():
-        with st.expander(
-            label = x
-        ):
-            st.markdown(f"## {x}")
-            st.write(ticker_yq.technical_insights[stock][x])
+    tab_names = [
+        "Instrument Info",
+        "Company Snapshot",
+        "Recommendation",
+        "Upsell",
+        "Upsell Search",
+        "Events",
+        "Reports",
+        "Sig Devs",
+        "SEC Reports"
+    ]
+    tabs = st.tabs(tab_names)
+    with tabs[0]:
+        st.write(ticker_yq.technical_insights[stock]["instrumentInfo"])
+    with tabs[1]:
+        st.write(ticker_yq.technical_insights[stock]["companySnapshot"])
+    with tabs[2]:
+        st.write(ticker_yq.technical_insights[stock]["recommendation"])
+    with tabs[3]:
+        st.write(ticker_yq.technical_insights[stock]["upsell"])
+    with tabs[4]:
+        st.write(ticker_yq.technical_insights[stock]["upsellSearchDD"])
+    with tabs[5]:
+        st.write(ticker_yq.technical_insights[stock]["events"])
+    with tabs[6]:
+        st.write(ticker_yq.technical_insights[stock]["reports"])
+    with tabs[7]:
+        st.write(ticker_yq.technical_insights[stock]["sigDevs"])
+    with tabs[8]:
+        st.write(ticker_yq.technical_insights[stock]["secReports"])

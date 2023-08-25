@@ -171,5 +171,5 @@ def option_menu():
         Page("pages/forex.py", "FOREX", in_section = False),
         Page("pages/about.py", "About Us", in_section = False),
     ])
-
     add_indentation()
+
