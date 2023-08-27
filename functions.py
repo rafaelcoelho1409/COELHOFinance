@@ -557,8 +557,8 @@ def stocks_filter_func2(periods_and_intervals):
             use_container_width = True
         )
         if search_button:
-            period_filter = st.session_state["period_filter"]
-            interval_filter = st.session_state["interval_filter"]
+            period_filter = st.session_state["period_filter2"]
+            interval_filter = st.session_state["interval_filter2"]
         return (
             element,
             period_filter,
