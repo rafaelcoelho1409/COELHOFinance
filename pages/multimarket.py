@@ -21,8 +21,7 @@ from functions import (
     get_sec_reports,
     stocks_filter_func,
     stocks_filter_func2,
-    indices_filter_func,
-    indices_filter_func2)
+    indices_filter_func)
 
 st.set_page_config(
     page_title = "COELHO Finance - MULTIMARKET",
@@ -65,16 +64,6 @@ with st.sidebar:
             short_name,
             feature_filter
         ) = stocks_filter_func2(periods_and_intervals)
-    elif investment_filter == "Indices":
-        (
-            element,
-            period_filter,
-            interval_filter,
-            element_filter,
-            exchange,
-            long_name,
-            currency
-        ) = indices_filter_func2(periods_and_intervals)
 
 main_tabs = st.tabs([
         "$$\\textbf{MULTIMARKET}$$",
