@@ -1,3 +1,4 @@
+investpy==1.0.8
 pandas==2.0.2
 plotly==5.14.1
 st_pages==0.4.4

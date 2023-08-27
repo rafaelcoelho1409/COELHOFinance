@@ -30,29 +30,17 @@ with st.expander(
     Get to know our financial analysis tools</h4><br>""",
     unsafe_allow_html = True
 )
-    grid2 = grid(2, 4, vertical_align = True)
-    grid2.markdown(f"<div style='text-align:center'><h4>Stock Exchange</h4></div>", unsafe_allow_html = True)
-    grid2.markdown(f"<div style='text-align:center'><h4>Market Index</h4></div>", unsafe_allow_html = True)
-    UNISTOCK = grid2.button(
-        label = "UNISTOCK",
+    grid2 = grid(2, vertical_align = True)
+    UNIMARKET = grid2.button(
+        label = "$$\\textbf{UNIMARKET}$$",
         use_container_width = True)
-    MULTISTOCK = grid2.button(
-        "MULTISTOCK",
+    MULTIMARKET = grid2.button(
+        "$$\\textbf{MULTIMARKET}$$",
         use_container_width = True)
-    UNINDEX = grid2.button(
-        label = "UNINDEX",
-        use_container_width = True)
-    MULTINDEX = grid2.button(
-        "MULTINDEX",
-        use_container_width = True)
-    if UNISTOCK:
-        switch_page("UNISTOCK")
-    if MULTISTOCK:
-        switch_page("MULTISTOCK")
-    if UNINDEX:
-        switch_page("UNINDEX")
-    if MULTINDEX:
-        switch_page("MULTINDEX")
+    if UNIMARKET:
+        switch_page("UNIMARKET")
+    if MULTIMARKET:
+        switch_page("MULTIMARKET")
 
 st.markdown("""<div style='text-align: center; font-size:25px'>
 COELHO Finance is a powerful financial analysis platform 
@@ -64,13 +52,13 @@ with st.expander(
     expanded = True):
     st.markdown("""<div style='font-size:25px'>
         <b>- Analyze individual stocks</b><br>
-        With UNISTOCK and UNINDEX tools, COELHO Finance provides 
+        With UNIMARKET tool, COELHO Finance provides 
         comprehensive analysis of individual stocks and indexes from 40+ countries, including 
         financial statements, price charts, analyst ratings and several business indicators about each stock price. 
         This information can help you identify undervalued stocks with the potential for growth.<br><br>""", unsafe_allow_html = True)
     st.markdown("""<div style='font-size:25px'>
         <b>- Compare stocks</b><br>
-        With MULTISTOCK and MULTINDEX tools, COELHO Finance allows you to compare 
+        With MULTIMARKET tool, COELHO Finance allows you to compare 
         the performance of two or more stocks or indexes, so you can see 
         which stocks or indexes are outperforming the market. These informations 
         can help you make informed decisions about which stocks to buy and sell.<br></div>""", unsafe_allow_html = True)

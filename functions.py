@@ -3,20 +3,22 @@ import yfinance as yf
 import yahooquery as yq
 import datetime as dt
 import pandas as pd
+import json
+import investpy
 from streamlit_extras.row import row
 from streamlit_extras.metric_cards import style_metric_cards
 from st_pages import show_pages, Page, Section, add_indentation
 
 @st.cache_resource
-def get_unistock(
-    stock, 
+def get_unimarket(
+    element, 
     period,
     interval,
     source):
     if source == "YFinance":
-        ticker = yf.Ticker(stock)
+        ticker = yf.Ticker(element)
     elif source == "YahooQuery":
-        ticker = yq.Ticker(stock)
+        ticker = yq.Ticker(element)
     else:
         raise ValueError("Choose YFinance or YahooQuery as data source")
     data = ticker.history(
@@ -28,40 +30,25 @@ def get_unistock(
         data)
 
 @st.cache_resource
-def get_unindex(
-    index, 
-    startdate_filter,
-    enddate_filter):
-    ticker = yf.Ticker(index)
-    data = ticker.history(
-        start = startdate_filter,
-        end = enddate_filter
+def get_multimarket(
+    elements, 
+    period,
+    interval,
+    source):
+    if source == "YFinance":
+        elements_ = " ".join(elements)
+        tickers = yf.Tickers(elements_)
+    elif source == "YahooQuery":
+        tickers = yq.Ticker(elements)
+    else:
+        raise ValueError("Choose YFinance or YahooQuery as data source")
+    data = tickers.history(
+        period = period,
+        interval = interval
     )
     return (
-        ticker, 
+        tickers, 
         data)
-
-@st.cache_resource
-def get_profile_report(data):
-    return data.profile_report()
-
-@st.cache_resource
-def get_multistock(stocks, startdate_filter, enddate_filter):
-    tickers = yf.Tickers(stocks)
-    multidata = tickers.history(
-        start = startdate_filter,
-        end = enddate_filter
-    )
-    return tickers, multidata
-
-@st.cache_resource
-def get_multindex(indexes, startdate_filter, enddate_filter):
-    tickers = yf.Tickers(indexes)
-    multidata = tickers.history(
-        start = startdate_filter,
-        end = enddate_filter
-    )
-    return tickers, multidata
 
 def indicator_metrics(
     stock,
@@ -159,17 +146,428 @@ def get_news(news):
             pass
         st.divider()
 
+def get_reports(reports):
+    data = pd.DataFrame(reports)
+    for x in data.iterrows():
+        st.markdown(f"### {x[1]['headHtml']}")
+        st.markdown(f"**ID:** {x[1]['id']}")
+        st.markdown(f"**PROVIDER:** {x[1]['provider']}")
+        st.markdown(f"**REPORT DATE:** {x[1]['reportDate']}")
+        st.markdown(f"**REPORT TITLE:** {x[1]['reportTitle']}")
+        st.markdown(f"**TARGET PRICE:** {x[1]['targetPrice']}")
+        st.markdown(f"**INVESTMENT RATING:** {x[1]['investmentRating']}")
+        st.divider()
+
+def get_sec_reports(sec_reports):
+    data = pd.DataFrame(sec_reports)
+    for x in data.iterrows():
+        st.markdown(f"### [{x[1]['title']}]({x[1]['snapshotUrl']})")
+        st.markdown(f"**ID:** {x[1]['id']}")
+        st.markdown(f"**TYPE:** {x[1]['type']}")
+        st.markdown(f"**DESCRIPTION:** {x[1]['description']}")
+        st.markdown(f"**FILING DATE:** {str(dt.datetime.fromtimestamp(x[1]['filingDate']/1000))}")
+        st.markdown(f"**FORM TYPE:** {x[1]['formType']}")
+        st.divider()
+
 def option_menu():
     show_pages([
         Page("app.py", "COELHO Finance"),
-        Section("Stock Exchange"),
-        Page("pages/unistock.py", "UNISTOCK"),
-        Page("pages/multistock.py", "MULTISTOCK"),
-        Section("Market Index"),
-        Page("pages/unindex.py", "UNINDEX"),
-        Page("pages/multindex.py", "MULTINDEX"),
-        Page("pages/forex.py", "FOREX", in_section = False),
+        Section("Market Analytics"),
+        Page("pages/unimarket.py", "UNIMARKET"),
+        Page("pages/multimarket.py", "MULTIMARKET"),
         Page("pages/about.py", "About Us", in_section = False),
     ])
     add_indentation()
+
+def stocks_filter_func(periods_and_intervals):
+    with st.form("market_form"):
+        market_filter = st.selectbox(
+            label = "Market",
+            placeholder = "Market",
+            options = sorted([
+                market["market"].upper()
+                for market 
+                in json.load(open("./data/market_list.json", "r"))]),
+            key = "market_filter"
+        )
+        market_button = st.form_submit_button(
+            label = "Select market",
+            use_container_width = True
+        )
+        if market_button:
+            market_filter = st.session_state["market_filter"]
+    with st.form("search_form"):
+        market_data_yf = pd.json_normalize(
+                json.load(open(f"./data/symbols/{market_filter.lower()}.json", "r")))\
+                    .sort_values(by = "symbol")\
+                    .reset_index(drop = True)
+        market_data_yf["options"] = market_data_yf["symbol"] + " - " + market_data_yf["longName"] + " (" + market_data_yf["shortName"] + ")"
+        element_filter = st.selectbox(
+            label = f"Stock ({market_filter})",
+            placeholder = "Stock",
+            options = market_data_yf["options"][
+                market_data_yf["options"].notnull()],
+            key = "stock_filter"
+        )
+        element = market_data_yf[market_data_yf["options"] == element_filter]["symbol"].iloc[0]
+        exchange = market_data_yf[market_data_yf["options"] == element_filter]["exchange"].iloc[0]
+        quote_type = market_data_yf[market_data_yf["options"] == element_filter]["quoteType"].iloc[0]
+        short_name = market_data_yf[market_data_yf["options"] == element_filter]["shortName"].iloc[0]
+        long_name = market_data_yf[market_data_yf["options"] == element_filter]["longName"].iloc[0]
+        period_filter = st.selectbox(
+            label = "Period",
+            placeholder = "Period",
+            options = periods_and_intervals[0]["period"],
+            index = 5,
+            key = "period_filter"
+        )
+        interval_filter = st.selectbox(
+            label = "Interval",
+            placeholder = "Interval",
+            options = periods_and_intervals[1]["interval"],
+            index = 8,
+            key = "interval_filter"
+        )
+        search_button = st.form_submit_button(
+            label = "Search",
+            use_container_width = True
+        )
+        if search_button:
+            #stock = stock
+            period_filter = st.session_state["period_filter"]
+            interval_filter = st.session_state["interval_filter"]
+        return (
+            element,
+            period_filter,
+            interval_filter,
+            element_filter,
+            exchange,
+            quote_type,
+            long_name,
+            short_name
+        )
+    
+def indices_filter_func(periods_and_intervals):
+    index_data = investpy.indices.get_indices()
+    index_data["options"] = index_data["symbol"] + " - " + index_data["name"]
+    index_data["country"] = index_data["country"].str.upper()
+    index_data["symbol_yf"] = "^" + index_data["symbol"]
+    with st.expander(
+        label = "Market",
+        expanded = True
+    ):
+        with st.form("market_form"):
+            market_filter = st.selectbox(
+                label = "Market",
+                placeholder = "Market",
+                options = sorted(index_data["country"].unique()),
+                index = 91,
+                key = "market_filter"
+            )
+            market_button = st.form_submit_button(
+                label = "Select market",
+                use_container_width = True
+            )
+            if market_button:
+                market_filter = st.session_state["market_filter"]
+        with st.form("search_form"):
+            index_options = index_data[
+                index_data["country"] == market_filter]["options"]
+            index_filter = st.selectbox(
+                label = f"Index ({market_filter})",
+                placeholder = "Index",
+                options = sorted(index_options),
+                key = "index_filter"
+            )
+            index = index_data[index_data["options"] == index_filter]["symbol_yf"].tolist()[0]
+            exchange = index_data[index_data["options"] == index_filter]["symbol"].tolist()[0]
+            currency = index_data[index_data["options"] == index_filter]["currency"].tolist()[0]
+            long_name = index_data[index_data["symbol_yf"] == index]["full_name"].tolist()[0]
+            period_filter = st.selectbox(
+                label = "Period",
+                placeholder = "Period",
+                options = periods_and_intervals[0]["period"],
+                index = 5,
+                key = "period_filter"
+            )
+            interval_filter = st.selectbox(
+                label = "Interval",
+                placeholder = "Interval",
+                options = periods_and_intervals[1]["interval"],
+                index = 8,
+                key = "interval_filter"
+            )
+            search_button = st.form_submit_button(
+                label = "Search",
+                use_container_width = True
+            )
+            if search_button:
+                period_filter = st.session_state["period_filter"]
+                interval_filter = st.session_state["interval_filter"]
+    return (
+        index,
+        period_filter,
+        interval_filter,
+        index_filter,
+        exchange,
+        long_name,
+        currency
+    )
+
+def funds_filter_func(periods_and_intervals):
+    funds_data = investpy.funds.get_funds()
+    funds_data["options"] = funds_data["symbol"] + " - " + funds_data["name"]
+    funds_data["country"] = funds_data["country"].str.upper()
+    with st.expander(
+        label = "Market",
+        expanded = True
+    ):
+        with st.form("market_form"):
+            market_filter = st.selectbox(
+                label = "Market",
+                placeholder = "Market",
+                options = sorted(funds_data["country"].unique()),
+                index = 58,
+                key = "market_filter"
+            )
+            market_button = st.form_submit_button(
+                label = "Select market",
+                use_container_width = True
+            )
+            if market_button:
+                market_filter = st.session_state["market_filter"]
+        with st.form("search_form"):
+            funds_options = funds_data[
+                funds_data["country"] == market_filter]["options"]
+            fund_filter = st.selectbox(
+                label = f"Fund ({market_filter})",
+                placeholder = "Index",
+                options = sorted(funds_options),
+                key = "fund_filter"
+            )
+            fund = funds_data[funds_data["options"] == fund_filter]["symbol"].tolist()[0]
+            exchange = funds_data[funds_data["options"] == fund_filter]["symbol"].tolist()[0]
+            currency = funds_data[funds_data["options"] == fund_filter]["currency"].tolist()[0]
+            period_filter = st.selectbox(
+                label = "Period",
+                placeholder = "Period",
+                options = periods_and_intervals[0]["period"],
+                index = 5,
+                key = "period_filter"
+            )
+            interval_filter = st.selectbox(
+                label = "Interval",
+                placeholder = "Interval",
+                options = periods_and_intervals[1]["interval"],
+                index = 8,
+                key = "interval_filter"
+            )
+            search_button = st.form_submit_button(
+                label = "Search",
+                use_container_width = True
+            )
+            if search_button:
+                period_filter = st.session_state["period_filter"]
+                interval_filter = st.session_state["interval_filter"]
+    return (
+        fund,
+        period_filter,
+        interval_filter,
+        fund_filter,
+        exchange,
+        currency
+    )
+
+def etfs_filter_func(periods_and_intervals):
+    etf_data = investpy.etfs.get_etfs()
+    etf_data["options"] = etf_data["symbol"] + " - " + etf_data["name"]
+    etf_data["country"] = etf_data["country"].str.upper()
+    with st.expander(
+        label = "Market",
+        expanded = True
+    ):
+        with st.form("market_form"):
+            market_filter = st.selectbox(
+                label = "Market",
+                placeholder = "Market",
+                options = sorted(etf_data["country"].unique()),
+                index = 47,
+                key = "market_filter"
+            )
+            market_button = st.form_submit_button(
+                label = "Select market",
+                use_container_width = True
+            )
+            if market_button:
+                market_filter = st.session_state["market_filter"]
+        with st.form("search_form"):
+            etf_options = etf_data[
+                etf_data["country"] == market_filter]["options"]
+            etf_filter = st.selectbox(
+                label = f"Index ({market_filter})",
+                placeholder = "Index",
+                options = sorted(etf_options),
+                key = "index_filter"
+            )
+            etf = etf_data[etf_data["options"] == etf_filter]["symbol"].tolist()[0]
+            exchange = etf_data[etf_data["options"] == etf_filter]["symbol"].tolist()[0]
+            currency = etf_data[etf_data["options"] == etf_filter]["currency"].tolist()[0]
+            long_name = etf_data[etf_data["symbol"] == etf_filter]["full_name"].tolist()[0]
+            period_filter = st.selectbox(
+                label = "Period",
+                placeholder = "Period",
+                options = periods_and_intervals[0]["period"],
+                index = 5,
+                key = "period_filter"
+            )
+            interval_filter = st.selectbox(
+                label = "Interval",
+                placeholder = "Interval",
+                options = periods_and_intervals[1]["interval"],
+                index = 8,
+                key = "interval_filter"
+            )
+            search_button = st.form_submit_button(
+                label = "Search",
+                use_container_width = True
+            )
+            if search_button:
+                period_filter = st.session_state["period_filter"]
+                interval_filter = st.session_state["interval_filter"]
+    return (
+        etf,
+        period_filter,
+        interval_filter,
+        etf_filter,
+        exchange,
+        long_name,
+        currency
+    )
+
+def currency_crosses_filter_func(periods_and_intervals):
+    cc_data = investpy.currency_crosses.get_currency_crosses()
+    cc_data["symbol_yf"] = cc_data["base"] + cc_data["second"] + "=X"
+    with st.expander(
+        label = "Market",
+        expanded = True
+    ):
+        with st.form("search_form"):
+            cc_options = cc_data["full_name"].unique()
+            cc_filter = st.selectbox(
+                label = f"Currency Cross",
+                placeholder = "Index",
+                options = sorted(cc_options),
+                key = "index_filter"
+            )
+            cc = cc_data[cc_data["full_name"] == cc_filter]["symbol_yf"].tolist()[0]
+            currency = cc_data[cc_data["full_name"] == cc_filter]["name"].tolist()[0]
+            long_name = cc_data[cc_data["full_name"] == cc_filter]["full_name"].tolist()[0]
+            period_filter = st.selectbox(
+                label = "Period",
+                placeholder = "Period",
+                options = periods_and_intervals[0]["period"],
+                index = 5,
+                key = "period_filter"
+            )
+            interval_filter = st.selectbox(
+                label = "Interval",
+                placeholder = "Interval",
+                options = periods_and_intervals[1]["interval"],
+                index = 8,
+                key = "interval_filter"
+            )
+            search_button = st.form_submit_button(
+                label = "Search",
+                use_container_width = True
+            )
+            if search_button:
+                period_filter = st.session_state["period_filter"]
+                interval_filter = st.session_state["interval_filter"]
+    return (
+        cc,
+        period_filter,
+        interval_filter,
+        cc_filter,
+        long_name,
+        currency
+    )
+    
+def stocks_filter_func2(periods_and_intervals):
+    with st.form("market_form2"):
+        market_filter = st.selectbox(
+            label = "Market",
+            placeholder = "Market",
+            options = sorted([
+                market["market"].upper()
+                for market 
+                in json.load(open("./data/market_list.json", "r"))]),
+            key = "market_filter2"
+        )
+        market_button = st.form_submit_button(
+            label = "Select market",
+            use_container_width = True
+        )
+        if market_button:
+            market_filter = st.session_state["market_filter"]
+    with st.form("search_form2"):
+        market_data_yf = pd.json_normalize(
+                json.load(open(f"./data/symbols/{market_filter.lower()}.json", "r")))\
+                    .sort_values(by = "symbol")\
+                    .reset_index(drop = True)
+        market_data_yf["options"] = market_data_yf["symbol"] + " - " + market_data_yf["longName"] + " (" + market_data_yf["shortName"] + ")"
+        element_filter = st.multiselect(
+            label = f"Stock ({market_filter})",
+            placeholder = "Stock",
+            options = market_data_yf["options"][
+                market_data_yf["options"].notnull()],
+            key = "stock_filter2"
+        )
+        feature_filter = st.selectbox(
+            label = "Feature",
+            options = [
+                "Open",
+                "High",
+                "Low",
+                "Close",
+                "Volume"
+            ],
+            index = 3,
+            key = "feature_filter2")
+        element = market_data_yf[market_data_yf["options"].isin(element_filter)]["symbol"]
+        exchange = market_data_yf[market_data_yf["options"].isin(element_filter)]["exchange"]
+        quote_type = market_data_yf[market_data_yf["options"].isin(element_filter)]["quoteType"]
+        short_name = market_data_yf[market_data_yf["options"].isin(element_filter)]["shortName"]
+        long_name = market_data_yf[market_data_yf["options"].isin(element_filter)]["longName"]
+        period_filter = st.selectbox(
+            label = "Period",
+            placeholder = "Period",
+            options = periods_and_intervals[0]["period"],
+            index = 5,
+            key = "period_filter2"
+        )
+        interval_filter = st.selectbox(
+            label = "Interval",
+            placeholder = "Interval",
+            options = periods_and_intervals[1]["interval"],
+            index = 8,
+            key = "interval_filter2"
+        )
+        search_button = st.form_submit_button(
+            label = "Search",
+            use_container_width = True
+        )
+        if search_button:
+            period_filter = st.session_state["period_filter"]
+            interval_filter = st.session_state["interval_filter"]
+        return (
+            element,
+            period_filter,
+            interval_filter,
+            element_filter,
+            exchange,
+            quote_type,
+            long_name,
+            short_name,
+            feature_filter
+        )
 
