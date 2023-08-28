@@ -40,7 +40,7 @@ with st.expander(
     if UNIMARKET:
         switch_page("UNIMARKET")
     if MULTIMARKET:
-        switch_page("MULTIMARKET")
+        switch_page("MULTIMARKET")  
 
 st.markdown("""<div style='text-align: center; font-size:25px'>
 COELHO Finance is a powerful financial analysis platform 

@@ -22,7 +22,8 @@ from functions import (
     indices_filter_func,
     funds_filter_func,
     etfs_filter_func,
-    currency_crosses_filter_func)
+    currency_crosses_filter_func,
+    cryptos_filter_func)
 
 st.set_page_config(
     page_title = "COELHO Finance - UNIMARKET",
@@ -46,10 +47,10 @@ with st.sidebar:
             "Funds",
             "ETFs",
             "Currency Crosses",
-            "Bonds",
+            "Crypto",
             "Commodities",
             "Certificates",
-            "Crypto"
+            "Bonds"
         ],
         index = 0,
         key = "investment_filter")
@@ -102,6 +103,18 @@ with st.sidebar:
             long_name,
             currency
         ) = currency_crosses_filter_func(periods_and_intervals)
+    elif asset_filter == "Crypto":
+        (
+            element,
+            period_filter,
+            interval_filter,
+            element_filter,
+            long_name,
+            currency
+        ) = cryptos_filter_func(periods_and_intervals)
+    else:
+        st.write("$$\\textbf{UNDER CONSTRUCTION}$$")
+        st.stop()
             
 
 (
@@ -136,130 +149,84 @@ main_tabs = st.tabs([
 ])
 
 with main_tabs[0]: #UNIMARKET TAB
-    with st.expander(
-        label = "Indicators",
+    grid1 = grid([5, 2], vertical_align = True)
+    with grid1.expander(
+        label = "$$\\textbf{\\underline{UNIMARKET - " + asset_filter + "}}$$",
         expanded = True
     ):
         try:
-            grid1 = grid(3, vertical_align = "center")
-            for (key, value) in [
-                ("Currency", currency),
-                ("Exchange", exchange),
-                ("Quote type", quote_type),
-                ]:
-                grid1.metric(
-                    label = key,
-                    value = str(value)
+            checkboxes_grid = grid(5, vertical_align = True)
+            checkboxes_grid.markdown("**OHLC filters**")
+            fig = go.Figure()
+            fig.add_trace(
+                go.Candlestick(
+                    x = data_yf.index,
+                    open = data_yf["Open"],
+                    high = data_yf["High"],
+                    low = data_yf["Low"],
+                    close = data_yf["Close"],
                 )
-            style_metric_cards(
-                background_color = "#000000",
             )
-        except:
-            try:
-                grid1 = grid(2, vertical_align = "center")
-                for (key, value) in [
-                    ("Currency", currency),
-                    ("Exchange", exchange),
-                    #("Quote type", quote_type),
-                    ]:
-                    grid1.metric(
-                        label = key,
-                        value = str(value)
+            for x in ["Open", "High", "Low", "Close"]:
+                if checkboxes_grid.checkbox(x):
+                    fig.add_trace(
+                        go.Scatter(
+                            x = data_yf.index,
+                            y = data_yf[x],
+                            mode = "lines",
+                            name = x
+                        )
                     )
-                style_metric_cards(
-                    background_color = "#000000",
-                )
-            except:
-                grid1 = grid(1, vertical_align = "center")
-                for (key, value) in [
-                    ("Currency", currency),
-                    #("Exchange", exchange),
-                    #("Quote type", quote_type),
-                    ]:
-                    grid1.metric(
-                        label = key,
-                        value = str(value)
-                    )
-                style_metric_cards(
-                    background_color = "#000000",
-                )
-    try:
-        checkboxes_grid = grid(5, vertical_align = True)
-        checkboxes_grid.markdown("**OHLC filters**")
-        fig = go.Figure()
-        fig.add_trace(
-            go.Candlestick(
+            fig2 = px.bar(
                 x = data_yf.index,
-                open = data_yf["Open"],
-                high = data_yf["High"],
-                low = data_yf["Low"],
-                close = data_yf["Close"],
+                y = data_yf["Volume"]
             )
-        )
-        for x in ["Open", "High", "Low", "Close"]:
-            if checkboxes_grid.checkbox(x):
-                fig.add_trace(
-                    go.Scatter(
-                        x = data_yf.index,
-                        y = data_yf[x],
-                        mode = "lines",
-                        name = x
-                    )
-                )
-        fig2 = px.bar(
-            x = data_yf.index,
-            y = data_yf["Volume"]
-        )
-        fig.update_layout(
-            xaxis_rangeslider_visible = False,
-            legend = {
-                "orientation": "h"
-            },
-            title = element_filter,
-        )
-        fig2.update_layout(
-            height = 200,
-            width = 800,
-            xaxis_title = None,
-            yaxis_title = None,
-            title = "Volume",
-            showlegend = False
-        )
-        fig2.update_traces(
-            marker_color = [
-                '#FF0000' 
-                if row['Open'] - row['Close'] >= 0
-                else '#00FF00' 
-                for index, row in data_yf.iterrows()]
-        )
-        # removing all empty dates
-        # build complete timeline from start date to end date
-        dt_all = pd.date_range(start = data_yf.index[0], end = data_yf.index[-1])
-        # retrieve the dates that ARE in the original datset
-        dt_obs = [d.strftime("%Y-%m-%d") for d in pd.to_datetime(data_yf.index)]
-        # define dates with missing values
-        dt_breaks = [d for d in dt_all.strftime("%Y-%m-%d").tolist() if not d in dt_obs]
-        fig.update_xaxes(
-            rangebreaks=[dict(values=dt_breaks)],
-            automargin = False)
-        fig2.update_xaxes(
-            rangebreaks=[dict(values=dt_breaks)])
-        st.plotly_chart(
-            fig,
-            use_container_width = True) 
-        st.plotly_chart(
-            fig2,
-            use_container_width = True)
-    except:
-        st.write("No informations.")
-with main_tabs[1]: #INFORMATIONS TAB
-    tabs = st.tabs([
-        "Informations",
-        "Summary",
-        "Company Officers",
-    ])
-    with tabs[0]:
-        st.markdown("# Informations")
+            fig.update_layout(
+                xaxis_rangeslider_visible = False,
+                legend = {
+                    "orientation": "h"
+                },
+                title = element_filter,
+            )
+            fig2.update_layout(
+                height = 200,
+                width = 800,
+                xaxis_title = None,
+                yaxis_title = None,
+                title = "Volume",
+                showlegend = False
+            )
+            fig2.update_traces(
+                marker_color = [
+                    '#FF0000' 
+                    if row['Open'] - row['Close'] >= 0
+                    else '#00FF00' 
+                    for index, row in data_yf.iterrows()]
+            )
+            # removing all empty dates
+            # build complete timeline from start date to end date
+            dt_all = pd.date_range(start = data_yf.index[0], end = data_yf.index[-1])
+            # retrieve the dates that ARE in the original datset
+            dt_obs = [d.strftime("%Y-%m-%d") for d in pd.to_datetime(data_yf.index)]
+            # define dates with missing values
+            dt_breaks = [d for d in dt_all.strftime("%Y-%m-%d").tolist() if not d in dt_obs]
+            fig.update_xaxes(
+                rangebreaks=[dict(values=dt_breaks)],
+                automargin = False)
+            fig2.update_xaxes(
+                rangebreaks=[dict(values=dt_breaks)])
+            st.plotly_chart(
+                fig,
+                use_container_width = True) 
+            st.plotly_chart(
+                fig2,
+                use_container_width = True)
+        except:
+            st.write("No informations.")
+    with grid1.expander(
+        label = "$$\\textbf{\\underline{BASIC INFORMATIONS}}$$",
+        expanded = True
+    ):
         try:
             informations = {}
             for x in ticker_yf.info.keys():
@@ -269,22 +236,17 @@ with main_tabs[1]: #INFORMATIONS TAB
                         if y.islower() 
                         else " " + y, x)).upper()
                     informations[information] = x
-            info = {}, {}
-            items_per_col = len(informations) // 2 
-            for i, (key, value) in enumerate(informations.items()):
-                try:
-                    info[(i // items_per_col)][key] = value
-                except:
-                    pass
-            subcols = st.columns(2)
-            for i in range(len(subcols)):
-                with subcols[i]:
-                    info_markdown = "".join(f"- **{key}:** {ticker_yf.info[value]}\n" for key, value in info[i].items())
-                    st.markdown(info_markdown)
+            for key, value in informations.items():
+                st.write("$$\\textbf{" + key.capitalize() + ":} $$ " + ticker_yf.info[value])
         except:
             st.write("No informations.")
-    with tabs[1]:
-        st.markdown("# Summary")
+with main_tabs[1]: #INFORMATIONS TAB
+    tabs = st.tabs([
+        "Summary",
+        "Company Officers",
+    ])
+    with tabs[0]:
+        st.write("$$\\huge{\\textbf{Summary}}$$")
         #This method below was made to avoid the company name to stay apart of the rest of the paragraph
         try:
             join_string = False
@@ -300,8 +262,8 @@ with main_tabs[1]: #INFORMATIONS TAB
                     st.markdown(f"- {x}")
         except:
             st.write("No informations.")
-    with tabs[2]:
-        st.markdown("# Company Officers")
+    with tabs[1]:
+        st.write("$$\\huge{\\textbf{Company Officers}}$$")
         try:
             st.dataframe(
                 ticker_yf.info["companyOfficers"],
@@ -323,7 +285,7 @@ with main_tabs[2]: #INDICATORS TAB
     ]
     subtabs = st.tabs(subtab_names)
     with subtabs[0]:
-        st.markdown("# MAIN INDICATORS")
+        st.write("$$\\huge{\\textbf{Main Indicators}}$$")
         try:
             indicators = {}
             for x in ticker_yf.info.keys():
@@ -382,7 +344,7 @@ with main_tabs[2]: #INDICATORS TAB
         except:
             pass
     with subtabs[1]:
-        st.markdown("# ESG Scores")
+        st.write("$$\\huge{\\textbf{ESG Scores}}$$")
         indicators_num, indicators_str = {}, {}
         try:
             for x in ticker_yq.esg_scores[element].keys():
@@ -414,7 +376,7 @@ with main_tabs[2]: #INDICATORS TAB
         except:
             st.write("No informations.")
     with subtabs[2]:
-        st.markdown("# Grading history")
+        st.write("$$\\huge{\\textbf{Grading History}}$$")
         try:
             st.dataframe(
                 ticker_yq.grading_history,
@@ -423,7 +385,7 @@ with main_tabs[2]: #INDICATORS TAB
         except:
             st.write("No informations.")
     with subtabs[3]:
-        st.markdown("# Institutional ownership")
+        st.write("$$\\huge{\\textbf{Institutional Ownership}}$$")
         try:
             st.dataframe(
                 ticker_yq.institution_ownership.drop("maxAge", axis = 1),
@@ -432,7 +394,7 @@ with main_tabs[2]: #INDICATORS TAB
         except:
             st.write("No informations.")
     with subtabs[4]:
-        st.markdown("# Key stats")
+        st.write("$$\\huge{\\textbf{Key Stats}}$$")
         indicators_num, indicators_str = {}, {}
         try:
             for x in ticker_yq.key_stats[element].keys():
@@ -479,6 +441,7 @@ with main_tabs[2]: #INDICATORS TAB
         except:
             st.write("No informations.")
     with subtabs[5]:
+        st.write("$$\\huge{\\textbf{Price}}$$")
         indicators_num, indicators_str = {}, {}
         try:
             for x in ticker_yq.price[element].keys():
@@ -500,7 +463,6 @@ with main_tabs[2]: #INDICATORS TAB
         patterns = [
             "GENERAL INDICATORS",
         ]
-        st.markdown("# Price")
         subsubtabs = st.tabs([
             "Main Indicators",
             "Main Informations"
@@ -541,7 +503,7 @@ with main_tabs[2]: #INDICATORS TAB
             except:
                 st.write("No informations.")
     with subtabs[6]:
-        st.markdown("# SEC Filings")
+        st.write("$$\\huge{\\textbf{SEC Filings}}$$")
         try:
             sec_filings = ticker_yq.sec_filings.reset_index()
             sec_filings_exhibits = pd.json_normalize(sec_filings["exhibits"])
@@ -557,7 +519,7 @@ with main_tabs[2]: #INDICATORS TAB
         except:
             st.write("No informations.")
     with subtabs[7]:
-        st.markdown("# Share purchase activity")
+        st.write("$$\\huge{\\textbf{Share Purchase Activity}}$$")
         indicators = {}
         try:
             for x in ticker_yq.share_purchase_activity[element].keys():
@@ -583,12 +545,13 @@ with main_tabs[2]: #INDICATORS TAB
         except:
             st.write("No informations.")
     with subtabs[8]:
-        st.markdown("# Quotes")
+        st.write("$$\\huge{\\textbf{Quotes}}$$")
         try:
             st.write(ticker_yq.quotes)
         except:
             st.write("No informations.")
     with subtabs[9]:
+        st.write("$$\\huge{\\textbf{Recommendations}}$$")
         try:
             st.dataframe(
                 ticker_yq.recommendations[element]["recommendedSymbols"],
@@ -596,7 +559,7 @@ with main_tabs[2]: #INDICATORS TAB
         except:
             st.write("No informations.")
 with main_tabs[3]: #NEWS TAB
-    st.title("Latest News")
+    st.write("$$\\huge{\\textbf{Latest News}}$$")
     try:
         get_news(ticker_yf.news)
     except:
@@ -624,7 +587,7 @@ with main_tabs[4]: #FINANCIAL TAB
             "Financial Data"
         ])
         with subsubtabs[0]:
-            st.markdown("# Financials")
+            st.write("$$\\huge{\\textbf{Financials}}$$")
             information = ticker_yf.financials.transpose()
             filterbox = st.selectbox(
                 label = "Feature",
@@ -641,7 +604,7 @@ with main_tabs[4]: #FINANCIAL TAB
                 fig,
                 use_container_width = True)
         with subsubtabs[1]:
-            st.markdown("# Quarterly financials")
+            st.write("$$\\huge{\\textbf{Quarterly Financials}}$$")
             information = ticker_yf.quarterly_financials.transpose()
             filterbox = st.selectbox(
                 label = "Feature",
@@ -658,7 +621,7 @@ with main_tabs[4]: #FINANCIAL TAB
                 fig,
                 use_container_width = True)
         with subsubtabs[2]:
-            st.markdown("# Financial data")
+            st.write("$$\\huge{\\textbf{Financial Data}}$$")
             informations = {}
             try:
                 for x in ticker_yq.financial_data[element].keys():
@@ -688,7 +651,7 @@ with main_tabs[4]: #FINANCIAL TAB
             "Income Statement Data"
         ])
         with subsubtabs[0]:
-            st.markdown("# Income Statement")
+            st.write("$$\\huge{\\textbf{Income Statement}}$$")
             information = ticker_yf.income_stmt.transpose()
             filterbox = st.selectbox(
                 label = "Feature",
@@ -705,7 +668,7 @@ with main_tabs[4]: #FINANCIAL TAB
                 fig,
                 use_container_width = True)
         with subsubtabs[1]:
-            st.markdown("# Quarterly Income Statement")
+            st.write("$$\\huge{\\textbf{Quarterly Income Statement}}$$")
             information = ticker_yf.income_stmt.transpose()
             filterbox = st.selectbox(
                 label = "Feature",
@@ -722,7 +685,7 @@ with main_tabs[4]: #FINANCIAL TAB
                 fig,
                 use_container_width = True)
         with subsubtabs[2]:
-            st.markdown("# Income Statement Data")
+            st.write("$$\\huge{\\textbf{Income Statement Data}}$$")
             try:
                 st.dataframe(
                     ticker_yq.income_statement().reset_index().transpose().reset_index(),
@@ -738,7 +701,7 @@ with main_tabs[4]: #FINANCIAL TAB
             "Balance Sheet Data"
         ])
         with subsubtabs[0]:
-            st.markdown("# Balance Sheet")
+            st.write("$$\\huge{\\textbf{Balance Sheet}}$$")
             information = ticker_yf.balance_sheet.transpose()
             filterbox = st.selectbox(
                 label = "Feature",
@@ -755,7 +718,7 @@ with main_tabs[4]: #FINANCIAL TAB
                 fig,
                 use_container_width = True)
         with subsubtabs[1]:
-            st.markdown("# Quarterly financials")
+            st.write("$$\\huge{\\textbf{Quarterly Balance Sheet}}$$")
             information = ticker_yf.quarterly_balance_sheet.transpose()
             filterbox = st.selectbox(
                 label = "Feature",
@@ -772,7 +735,7 @@ with main_tabs[4]: #FINANCIAL TAB
                 fig,
                 use_container_width = True)
         with subsubtabs[2]:
-            st.markdown("# Balance Sheet Data")
+            st.write("$$\\huge{\\textbf{Balance Sheet Data}}$$")
             try:
                 st.dataframe(
                     ticker_yq.balance_sheet().reset_index().transpose().reset_index(),
@@ -788,7 +751,7 @@ with main_tabs[4]: #FINANCIAL TAB
             "Cash Flow Data"
         ])
         with subsubtabs[0]:
-            st.markdown("# Cash Flow")
+            st.write("$$\\huge{\\textbf{Cash Flow}}$$")
             information = ticker_yf.cash_flow.transpose()
             filterbox = st.selectbox(
                 label = "Feature",
@@ -805,7 +768,7 @@ with main_tabs[4]: #FINANCIAL TAB
                 fig,
                 use_container_width = True)
         with subsubtabs[1]:
-            st.markdown("# Quarterly Cash Flow")
+            st.write("$$\\huge{\\textbf{Quarterly Cash Flow}}$$")
             information = ticker_yf.quarterly_cash_flow.transpose()
             filterbox = st.selectbox(
                 label = "Feature",
@@ -822,7 +785,7 @@ with main_tabs[4]: #FINANCIAL TAB
                 fig,
                 use_container_width = True)
         with subsubtabs[2]:
-            st.markdown("# Cash Flow Data")
+            st.write("$$\\huge{\\textbf{Cash Flow Data}}$$")
             try:
                 st.dataframe(
                     ticker_yq.cash_flow().reset_index().transpose().reset_index(),
@@ -841,25 +804,25 @@ with main_tabs[4]: #FINANCIAL TAB
             "Major Holders Data"
         ])
         with subsubtabs[0]:
-            st.markdown("# Major Holders")
+            st.write("$$\\huge{\\textbf{Major Holders}}$$")
             st.dataframe(
                 ticker_yf.major_holders,
                 hide_index = True,
                 use_container_width = True)
         with subsubtabs[1]:
-            st.markdown("# Institutional Holders")
+            st.write("$$\\huge{\\textbf{Institutional Holders}}$$")
             st.dataframe(
                 ticker_yf.institutional_holders,
                 hide_index = True,
                 use_container_width = True)
         with subsubtabs[2]:
-            st.markdown("# Mutual Fund Holders")
+            st.write("$$\\huge{\\textbf{Mutual Fund Holders}}$$")
             st.dataframe(
                 ticker_yf.mutualfund_holders,
                 hide_index = True,
                 use_container_width = True)
         with subsubtabs[3]:
-            st.markdown("# Insider Holders")
+            st.write("$$\\huge{\\textbf{Insider Holders}}$$")
             try:
                 st.dataframe(
                     ticker_yq.insider_holders.drop("maxAge", axis = 1),
@@ -868,7 +831,7 @@ with main_tabs[4]: #FINANCIAL TAB
             except:
                 st.write("No informations.")
         with subsubtabs[4]:
-            st.markdown("# Insider Transactions")
+            st.write("$$\\huge{\\textbf{Insider Transactions}}$$")
             try:
                 st.dataframe(
                     ticker_yq.insider_transactions.drop("maxAge", axis = 1),
@@ -877,7 +840,7 @@ with main_tabs[4]: #FINANCIAL TAB
             except:
                 st.write("No informations.")
         with subsubtabs[5]:
-            st.markdown("# Major Holders Data")
+            st.write("$$\\huge{\\textbf{Major Holders Data}}$$")
             try:
                 indicators = {}
                 for x in ticker_yq.major_holders[element].keys():
@@ -909,7 +872,7 @@ with main_tabs[4]: #FINANCIAL TAB
             "Earnings Trend"
         ])
         with subsubtabs[0]:
-            st.markdown(f"# Earnings Dates")
+            st.write("$$\\huge{\\textbf{Earnings Dates}}$$")
             try:
                 information = ticker_yf.earnings_dates.reset_index()
                 filterbox = st.selectbox(
@@ -929,7 +892,7 @@ with main_tabs[4]: #FINANCIAL TAB
             except:
                 st.write("No informations.")
         with subsubtabs[1]:
-            st.markdown("# Earning History")
+            st.write("$$\\huge{\\textbf{Earning History}}$$")
             try:
                 st.dataframe(
                     ticker_yq.earning_history.drop("maxAge", axis = 1),
@@ -938,7 +901,7 @@ with main_tabs[4]: #FINANCIAL TAB
             except:
                 st.write("No informations.")
         with subsubtabs[2]:
-            st.markdown("# Earning History")
+            st.write("$$\\huge{\\textbf{Earnings}}$$")
             try:
                 st.dataframe(
                     pd.json_normalize(ticker_yq.earnings[element]).transpose(),
@@ -948,7 +911,7 @@ with main_tabs[4]: #FINANCIAL TAB
             except:
                 st.write("No informations.")
         with subsubtabs[3]:
-            st.markdown("# Earnings Trend")
+            st.write("$$\\huge{\\textbf{Earnings Trend}}$$")
             try:
                 st.dataframe(
                     pd.json_normalize(ticker_yq.earnings_trend[element]["trend"]).transpose(),
@@ -957,7 +920,7 @@ with main_tabs[4]: #FINANCIAL TAB
             except:
                 st.write("No informations.")
     with subtabs_[6]:
-        st.markdown("# Valuation Measures")
+        st.write("$$\\huge{\\textbf{Valuation Measures}}$$")
         try:
             st.dataframe(
                 ticker_yq.valuation_measures,
@@ -967,7 +930,7 @@ with main_tabs[4]: #FINANCIAL TAB
         except:
             st.write("No informations.")
     with subtabs_[7]:
-        st.markdown("# Shares Full")
+        st.write("$$\\huge{\\textbf{Shares Full}}$$")
         try:
             information = ticker_yf.get_shares_full().transpose()
             fig = px.bar(
@@ -992,7 +955,7 @@ with main_tabs[4]: #FINANCIAL TAB
             x.replace("_", " ").upper() for x in attrs])
         for i, attr in enumerate(attrs):
             with subtabs[i]:
-                st.markdown(f"# {attr.replace('_', ' ').capitalize()}")
+                st.write("$$\\huge{\\textbf{" + attr.replace('_', ' ').capitalize() + "}}$$")
                 try:
                     st.dataframe(ticker_yf.__getattribute__(attr)())
                 except:
@@ -1006,7 +969,7 @@ with main_tabs[4]: #FINANCIAL TAB
             "Recommendation Trend"
         ])
         with subsubtabs[0]:
-            st.markdown("# Index Trend")
+            st.write("$$\\huge{\\textbf{Index Trend}}$$")
             indicators = {}
             try:
                 for x in ticker_yq.index_trend[element].keys():
@@ -1035,7 +998,7 @@ with main_tabs[4]: #FINANCIAL TAB
             except:
                 st.write("No informations.")
         with subsubtabs[1]:
-            st.markdown("# Recommendations Trend")
+            st.write("$$\\huge{\\textbf{Recommendations Trend}}$$")
             try:
                 st.dataframe(
                     ticker_yq.recommendation_trend,
@@ -1045,7 +1008,7 @@ with main_tabs[4]: #FINANCIAL TAB
             except:
                 st.write("No informations.")
     with subtabs_[10]:
-        st.markdown("# Option Chain")
+        st.write("$$\\huge{\\textbf{Option Chain}}$$")
         try:
             st.dataframe(
                 ticker_yq.option_chain,
@@ -1059,7 +1022,7 @@ with main_tabs[4]: #FINANCIAL TAB
             "Corporate Events"
         ])
         with subsubtabs[0]:
-            st.markdown("# Calendar Events")
+            st.write("$$\\huge{\\textbf{Calendar Events}}$$")
             try:
                 st.dataframe(
                     pd.json_normalize(ticker_yq.calendar_events[element]).transpose().reset_index(),
@@ -1069,7 +1032,7 @@ with main_tabs[4]: #FINANCIAL TAB
             except:
                 st.write("No informations.")
         with subsubtabs[1]:
-            st.markdown("# Corporate Events")
+            st.write("$$\\huge{\\textbf{Corporate Events}}$$")
             try:
                 st.dataframe(
                     ticker_yq.corporate_events,
@@ -1091,49 +1054,49 @@ with main_tabs[5]: #TECHNICAL INSIGHTS TAB
     ]
     tabs = st.tabs(tab_names)
     with tabs[0]:
-        st.markdown("# Instrument Info")
+        st.write("$$\\huge{\\textbf{Instrument Info}}$$")
         try:
             st.write(ticker_yq.technical_insights[element]["instrumentInfo"])
         except:
             st.write("No informations.")
     with tabs[1]:
-        st.markdown("# Company Snapshot")
+        st.write("$$\\huge{\\textbf{Company Snapshot}}$$")
         try:
             st.write(ticker_yq.technical_insights[element]["companySnapshot"])
         except:
             st.write("No informations.")
     with tabs[2]:
-        st.markdown("# Recommendation")
+        st.write("$$\\huge{\\textbf{Recommendation}}$$")
         try:
             st.write(ticker_yq.technical_insights[element]["recommendation"])
         except:
             st.write("No informations.")
     with tabs[3]:
-        st.markdown("# Upsell")
+        st.write("$$\\huge{\\textbf{Upsell}}$$")
         try:
             st.write(ticker_yq.technical_insights[element]["upsell"])
         except:
             st.write("No informations.")
     with tabs[4]:
-        st.markdown("# Upsell Search")
+        st.write("$$\\huge{\\textbf{Upsell Search}}$$")
         try:
             st.write(ticker_yq.technical_insights[element]["upsellSearchDD"])
         except:
             st.write("No informations.")
     with tabs[5]:
-        st.markdown("# Events")
+        st.write("$$\\huge{\\textbf{Events}}$$")
         try:
             st.write(ticker_yq.technical_insights[element]["events"])
         except:
             st.write("No informations.")
     with tabs[6]:
-        st.markdown("# Reports")
+        st.write("$$\\huge{\\textbf{Reports}}$$")
         try:
             get_reports(ticker_yq.technical_insights[element]["reports"])
         except:
             st.write("No informations.")
     with tabs[7]:
-        st.markdown("# SEC Reports")
+        st.write("$$\\huge{\\textbf{SEC Reports}}$$")
         try:
             get_sec_reports(ticker_yq.technical_insights[element]["secReports"])
         except:

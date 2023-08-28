@@ -205,8 +205,9 @@ def stocks_filter_func(periods_and_intervals):
         element_filter = st.selectbox(
             label = f"Stock ({market_filter})",
             placeholder = "Stock",
-            options = market_data_yf["options"][
-                market_data_yf["options"].notnull()],
+            options = sorted(market_data_yf["options"][
+                market_data_yf["options"].notnull()]),
+            index = 15,
             key = "stock_filter"
         )
         element = market_data_yf[market_data_yf["options"] == element_filter]["symbol"].iloc[0]
@@ -277,6 +278,7 @@ def indices_filter_func(periods_and_intervals):
                 label = f"Index ({market_filter})",
                 placeholder = "Index",
                 options = sorted(index_options),
+                index = 1059,
                 key = "index_filter"
             )
             index = index_data[index_data["options"] == index_filter]["symbol_yf"].tolist()[0]
@@ -341,8 +343,9 @@ def funds_filter_func(periods_and_intervals):
                 funds_data["country"] == market_filter]["options"]
             fund_filter = st.selectbox(
                 label = f"Fund ({market_filter})",
-                placeholder = "Index",
+                placeholder = "Fund",
                 options = sorted(funds_options),
+                index = 12215,
                 key = "fund_filter"
             )
             fund = funds_data[funds_data["options"] == fund_filter]["symbol"].tolist()[0]
@@ -404,15 +407,16 @@ def etfs_filter_func(periods_and_intervals):
             etf_options = etf_data[
                 etf_data["country"] == market_filter]["options"]
             etf_filter = st.selectbox(
-                label = f"Index ({market_filter})",
-                placeholder = "Index",
+                label = f"ETFs ({market_filter})",
+                placeholder = "ETFs",
                 options = sorted(etf_options),
-                key = "index_filter"
+                index = 1776,
+                key = "etf_filter"
             )
             etf = etf_data[etf_data["options"] == etf_filter]["symbol"].tolist()[0]
             exchange = etf_data[etf_data["options"] == etf_filter]["symbol"].tolist()[0]
             currency = etf_data[etf_data["options"] == etf_filter]["currency"].tolist()[0]
-            long_name = etf_data[etf_data["symbol"] == etf_filter]["full_name"].tolist()[0]
+            long_name = etf_data[etf_data["symbol"] == etf]["full_name"].tolist()[0]
             period_filter = st.selectbox(
                 label = "Period",
                 placeholder = "Period",
@@ -455,8 +459,9 @@ def currency_crosses_filter_func(periods_and_intervals):
             cc_options = cc_data["full_name"].unique()
             cc_filter = st.selectbox(
                 label = f"Currency Cross",
-                placeholder = "Index",
+                placeholder = "Currency Cross",
                 options = sorted(cc_options),
+                index = 1760,
                 key = "index_filter"
             )
             cc = cc_data[cc_data["full_name"] == cc_filter]["symbol_yf"].tolist()[0]
@@ -491,6 +496,56 @@ def currency_crosses_filter_func(periods_and_intervals):
         long_name,
         currency
     )
+
+def cryptos_filter_func(periods_and_intervals):
+    crypto_data = investpy.crypto.get_cryptos()
+    crypto_data["options"] = crypto_data["symbol"] + " - " + crypto_data["name"]
+    crypto_data["symbol_yf"] = crypto_data["symbol"] + "-" + crypto_data["currency"]
+    with st.expander(
+        label = "Market",
+        expanded = True
+    ):
+        with st.form("search_form"):
+            crypto_filter = st.selectbox(
+                label = f"Cryptocurrency",
+                placeholder = "Cryptocurrency",
+                options = sorted(crypto_data["options"].unique()),
+                index = 130,
+                key = "crypto_filter"
+            )
+            crypto = crypto_data[crypto_data["options"] == crypto_filter]["symbol_yf"].tolist()[0]
+            currency = crypto_data[crypto_data["options"] == crypto_filter]["currency"].tolist()[0]
+            long_name = crypto_data[crypto_data["symbol_yf"] == crypto]["name"].tolist()[0]
+            period_filter = st.selectbox(
+                label = "Period",
+                placeholder = "Period",
+                options = periods_and_intervals[0]["period"],
+                index = 5,
+                key = "period_filter"
+            )
+            interval_filter = st.selectbox(
+                label = "Interval",
+                placeholder = "Interval",
+                options = periods_and_intervals[1]["interval"],
+                index = 8,
+                key = "interval_filter"
+            )
+            search_button = st.form_submit_button(
+                label = "Search",
+                use_container_width = True
+            )
+            if search_button:
+                period_filter = st.session_state["period_filter"]
+                interval_filter = st.session_state["interval_filter"]
+    return (
+        crypto,
+        period_filter,
+        interval_filter,
+        crypto_filter,
+        long_name,
+        currency
+    )
+
     
 def stocks_filter_func2(periods_and_intervals):
     with st.form("market_form2"):

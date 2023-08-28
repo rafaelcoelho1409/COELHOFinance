@@ -64,6 +64,9 @@ with st.sidebar:
             short_name,
             feature_filter
         ) = stocks_filter_func2(periods_and_intervals)
+    else:
+        st.write("$$\\textbf{UNDER CONSTRUCTION}$$")
+        st.stop()
 
 main_tabs = st.tabs([
         "$$\\textbf{MULTIMARKET}$$",
@@ -113,7 +116,6 @@ with main_tabs[0]: #COMPARISON TAB
             text_auto = True,
             aspect = "auto",
             color_continuous_scale = "RdBu_r")
-        fig2.layout.title = f"CORRELATION ({feature_filter})"
         grid1.plotly_chart(
             fig2,
             use_container_width = True)
