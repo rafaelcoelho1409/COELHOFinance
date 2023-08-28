@@ -36,9 +36,9 @@ with open("./data/periods_and_intervals.json", "r") as f:
     periods_and_intervals = json.load(f)
 
 with st.sidebar:
-    investment_filter = st.selectbox(
-        label = "Investment type",
-        placeholder = "Investment type",
+    asset_filter = st.selectbox(
+        label = "Asset type",
+        placeholder = "Asset type",
         options = [
             "Stocks",
             "Indices",
@@ -52,7 +52,7 @@ with st.sidebar:
         ],
         index = 0,
         key = "investment_filter")
-    if investment_filter == "Stocks":
+    if asset_filter == "Stocks":
         (
             element,
             period_filter,
