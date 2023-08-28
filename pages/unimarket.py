@@ -137,7 +137,7 @@ with st.sidebar:
 if asset_filter == "Stocks":
     currency = ticker_yf.info["currency"]
 
-st.write(f"**{element_filter}**")
+st.write("$$\\text{" + element_filter + "}$$")
 
 main_tabs = st.tabs([
         "$$\\textbf{UNIMARKET}$$",
@@ -186,7 +186,6 @@ with main_tabs[0]: #UNIMARKET TAB
                 legend = {
                     "orientation": "h"
                 },
-                title = element_filter,
             )
             fig2.update_layout(
                 height = 200,
@@ -215,6 +214,7 @@ with main_tabs[0]: #UNIMARKET TAB
                 automargin = False)
             fig2.update_xaxes(
                 rangebreaks=[dict(values=dt_breaks)])
+            fig.layout.title = element_filter
             st.plotly_chart(
                 fig,
                 use_container_width = True) 
@@ -242,8 +242,8 @@ with main_tabs[0]: #UNIMARKET TAB
             st.write("No informations.")
 with main_tabs[1]: #INFORMATIONS TAB
     tabs = st.tabs([
-        "Summary",
-        "Company Officers",
+        "$$\\textbf{Summary}$$",
+        "$$\\textbf{Company Officers}$$",
     ])
     with tabs[0]:
         st.write("$$\\huge{\\textbf{Summary}}$$")
@@ -266,22 +266,23 @@ with main_tabs[1]: #INFORMATIONS TAB
         st.write("$$\\huge{\\textbf{Company Officers}}$$")
         try:
             st.dataframe(
-                ticker_yf.info["companyOfficers"],
+                pd.DataFrame(ticker_yf.info["companyOfficers"]).drop("maxAge", axis = 1),
+                hide_index = True,
                 use_container_width = True)
         except:
             st.write("No informations.")
 with main_tabs[2]: #INDICATORS TAB
     subtab_names = [
-        "MAIN INDICATORS",
-        "ESG SCORES",
-        "GRADING HISTORY",
-        "INSTITUTIONAL OWNERSHIP",
-        "KEY STATS",
-        "PRICE",
-        "SEC FILINGS",
-        "SHARE PURCHASE ACTIVITY",
-        "QUOTES",
-        "RECOMMENDATIONS"
+        "$$\\textbf{Main Indicators}$$",
+        "$$\\textbf{ESG Scores}$$",
+        "$$\\textbf{Grading History}$$",
+        "$$\\textbf{Institutional Ownership}$$",
+        "$$\\textbf{Key Stats}$$",
+        "$$\\textbf{Price}$$",
+        "$$\\textbf{SEC Filings}$$",
+        "$$\\textbf{Share Purchase Activity}$$",
+        "$$\\textbf{Quotes}$$",
+        "$$\\textbf{Recommendations}$$"
     ]
     subtabs = st.tabs(subtab_names)
     with subtabs[0]:
@@ -478,7 +479,6 @@ with main_tabs[2]: #INDICATORS TAB
                 "YahooQuery"
             )
         with subsubtabs[1]:
-            st.markdown("# Main informations")
             informations = {}
             try:
                 for x in ticker_yq.price[element].keys():
@@ -498,8 +498,9 @@ with main_tabs[2]: #INDICATORS TAB
                 subcols = st.columns(2)
                 for i in range(len(subcols)):
                     with subcols[i]:
-                        info_markdown = "".join(f"- **{key}:** {ticker_yq.price[element][value]}\n" for key, value in info[i].items())
-                        st.markdown(info_markdown)
+                        for key, value in info[i].items():
+                            info_latex = "$$\\textbf{" + key.capitalize() + ":}$$  " + ticker_yq.price[element][value] + "\n"
+                            st.write(info_latex)
             except:
                 st.write("No informations.")
     with subtabs[6]:
@@ -512,7 +513,10 @@ with main_tabs[2]: #INDICATORS TAB
                 sec_filings_exhibits
             ], axis = 1)
             st.dataframe(
-                sec_filings_final.drop("maxAge", axis = 1),
+                sec_filings_final.drop([
+                    "maxAge",
+                    "symbol",
+                    "row"], axis = 1).reset_index(drop = True),
                 hide_index = True,
                 use_container_width = True
             )
@@ -551,11 +555,18 @@ with main_tabs[2]: #INDICATORS TAB
         except:
             st.write("No informations.")
     with subtabs[9]:
-        st.write("$$\\huge{\\textbf{Recommendations}}$$")
+        st.write("$$\\huge{\\textbf{Recommendations (Score)}}$$")
         try:
-            st.dataframe(
-                ticker_yq.recommendations[element]["recommendedSymbols"],
-                use_container_width = True)
+            recommended_symbols = pd.DataFrame(ticker_yq.recommendations[element]["recommendedSymbols"])
+            grid1 = grid(recommended_symbols.shape[0], vertical_align = True)
+            for x in recommended_symbols.iterrows():
+                grid1.metric(
+                    label = "$$\\textbf{Symbol:}$$  " + str(x[1]["symbol"]),
+                    value = x[1]["score"]
+                )
+                style_metric_cards(
+                    background_color = "#000000"
+                )
         except:
             st.write("No informations.")
 with main_tabs[3]: #NEWS TAB
@@ -566,18 +577,18 @@ with main_tabs[3]: #NEWS TAB
         st.write("No informations.")
 with main_tabs[4]: #FINANCIAL TAB
     subtab_names = [
-        "FINANCIALS",
-        "INCOME STATEMENT",
-        "BALANCE SHEET",
-        "CASH FLOW",
-        "HOLDERS",
-        "EARNINGS",
-        "VALUATION MEASURES",
-        "SHARES FULL",
-        "DIVIDENDS & SPLITS",
-        "TREND",
-        "OPTION CHAIN",
-        "EVENTS"
+        "$$\\textbf{Financials}$$",
+        "$$\\textbf{Income Statement}$$",
+        "$$\\textbf{Balance Sheet}$$",
+        "$$\\textbf{Cash Flow}$$",
+        "$$\\textbf{Holders}$$",
+        "$$\\textbf{Earnings}$$",
+        "$$\\textbf{Valuation Measures}$$",
+        "$$\\textbf{Shares Full}$$",
+        "$$\\textbf{Dividends \& Splits}$$",
+        "$$\\textbf{Trend}$$",
+        "$$\\textbf{Option Chain}$$",
+        "$$\\textbf{Events}$$"
     ]
     subtabs_ = st.tabs(subtab_names)
     with subtabs_[0]:
@@ -805,10 +816,16 @@ with main_tabs[4]: #FINANCIAL TAB
         ])
         with subsubtabs[0]:
             st.write("$$\\huge{\\textbf{Major Holders}}$$")
-            st.dataframe(
-                ticker_yf.major_holders,
-                hide_index = True,
-                use_container_width = True)
+            major_holders = ticker_yf.major_holders
+            grid1 = grid(major_holders.shape[0], vertical_align = True)
+            for x in major_holders.iterrows():
+                grid1.metric(
+                    label = str(x[1][1]),
+                    value = str(x[1][0])
+                )
+            style_metric_cards(
+                background_color = "#000000"
+            )
         with subsubtabs[1]:
             st.write("$$\\huge{\\textbf{Institutional Holders}}$$")
             st.dataframe(
@@ -988,12 +1005,17 @@ with main_tabs[4]: #FINANCIAL TAB
                     "index_trend",
                     "YahooQuery"
                 )
-                st.header("Estimates")
-                st.dataframe(
-                    pd.DataFrame(
-                        ticker_yq.index_trend[element]["estimates"]).transpose().reset_index(),
-                        hide_index = True,
-                        use_container_width = True
+                st.header("Estimates (growth)")
+                estimates = pd.DataFrame(
+                        ticker_yq.index_trend[element]["estimates"]).reset_index(drop = True)
+                grid1 = grid(estimates.shape[0], vertical_align = True)
+                for x in estimates.iterrows():
+                    grid1.metric(
+                        label = "$$\\textbf{Period}: $$" + str(x[1]["period"]),
+                        value = str(x[1]["growth"])
+                    )
+                style_metric_cards(
+                    background_color = "#000000"
                 )
             except:
                 st.write("No informations.")
@@ -1043,20 +1065,22 @@ with main_tabs[4]: #FINANCIAL TAB
                 st.write("No informations.")
 with main_tabs[5]: #TECHNICAL INSIGHTS TAB
     tab_names = [
-        "Instrument Info",
-        "Company Snapshot",
-        "Recommendation",
-        "Upsell",
-        "Upsell Search",
-        "Events",
-        "Reports",
-        "SEC Reports"
+        "$$\\textbf{Instrument Info}$$",
+        "$$\\textbf{Company Snapshot}$$",
+        "$$\\textbf{Recommendation}$$",
+        "$$\\textbf{Upsell}$$",
+        "$$\\textbf{Upsell Search}$$",
+        "$$\\textbf{Events}$$",
+        "$$\\textbf{Reports}$$",
+        "$$\\textbf{SEC Reports}$$"
     ]
     tabs = st.tabs(tab_names)
     with tabs[0]:
         st.write("$$\\huge{\\textbf{Instrument Info}}$$")
+        st.write("   ")
         try:
-            st.write(ticker_yq.technical_insights[element]["instrumentInfo"])
+            instrument_info = ticker_yq.technical_insights[element]["instrumentInfo"]
+            st.write(instrument_info)
         except:
             st.write("No informations.")
     with tabs[1]:

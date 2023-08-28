@@ -138,10 +138,10 @@ def get_news(news):
     news_df["providerPublishTime"] = news_df["providerPublishTime"].apply(lambda x: dt.datetime.fromtimestamp(x))
     for x in news_df.iterrows():
         st.markdown(f"### [{x[1]['title']}]({x[1]['link']})")
-        st.markdown(f"**PUBLISHER:** {x[1]['publisher']}")
-        st.markdown(f"**TIME:** {x[1]['providerPublishTime']}")
+        st.write("$$\\textbf{Publisher:}$$  " + str(x[1]['publisher']))
+        st.write("$$\\textbf{Time:}$$  " + str(x[1]['providerPublishTime']))
         try:
-            st.markdown(f"**RELATED TICKERS:** {', '.join(y for y in x[1]['relatedTickers'])}")
+            st.write("$$\\textbf{Related Tickers:}$$  " + ', '.join(y for y in x[1]['relatedTickers']))
         except:
             pass
         st.divider()
