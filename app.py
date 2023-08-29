@@ -15,7 +15,7 @@ grid1 = grid([1, 5], vertical_align = True)
 grid1.image(
     "assets/coelho_finance_logo.png",
 )
-grid1.markdown(
+grid1.latex(
     """<h2 style='text-align: center'>A new powerful tool to help 
     you make informed investment decisions, track your investments 
     and identify opportunities.</h2><br>""",

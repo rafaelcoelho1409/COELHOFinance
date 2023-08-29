@@ -23,7 +23,10 @@ from functions import (
     funds_filter_func,
     etfs_filter_func,
     currency_crosses_filter_func,
-    cryptos_filter_func)
+    cryptos_filter_func,
+    bonds_filter_func,
+    commodities_filter_func,
+    split_key_name)
 
 st.set_page_config(
     page_title = "COELHO Finance - UNIMARKET",
@@ -32,7 +35,7 @@ st.set_page_config(
 
 option_menu()
 
-st.title("$$\\textbf{COELHO Finance - UNIMARKET}$$")
+st.title("$$\\large{\\textbf{COELHO Finance - UNIMARKET}}$$")
 
 with open("./data/periods_and_intervals.json", "r") as f:
     periods_and_intervals = json.load(f)
@@ -44,12 +47,11 @@ with st.sidebar:
         options = [
             "Stocks",
             "Indices",
+            "Crypto",
+            "Currency Crosses",
             "Funds",
             "ETFs",
-            "Currency Crosses",
-            "Crypto",
             "Commodities",
-            "Certificates",
             "Bonds"
         ],
         index = 0,
@@ -112,6 +114,22 @@ with st.sidebar:
             long_name,
             currency
         ) = cryptos_filter_func(periods_and_intervals)
+    elif asset_filter == "Bonds":
+        (
+            element,
+            period_filter,
+            interval_filter,
+            element_filter,
+            long_name
+        ) = bonds_filter_func(periods_and_intervals)
+    elif asset_filter == "Commodities":
+        (
+            element,
+            period_filter,
+            interval_filter,
+            element_filter,
+            long_name
+        ) = commodities_filter_func(periods_and_intervals)
     else:
         st.write("$$\\textbf{UNDER CONSTRUCTION}$$")
         st.stop()
@@ -137,7 +155,7 @@ with st.sidebar:
 if asset_filter == "Stocks":
     currency = ticker_yf.info["currency"]
 
-st.write("$$\\text{" + element_filter + "}$$")
+st.write("$$\\text{" + element_filter.replace("^", "") + "}$$")
 
 main_tabs = st.tabs([
         "$$\\textbf{UNIMARKET}$$",
@@ -155,7 +173,7 @@ with main_tabs[0]: #UNIMARKET TAB
         expanded = True
     ):
         try:
-            checkboxes_grid = grid(5, vertical_align = True)
+            checkboxes_grid = grid(6, vertical_align = True)
             checkboxes_grid.markdown("**OHLC filters**")
             fig = go.Figure()
             fig.add_trace(
@@ -167,7 +185,7 @@ with main_tabs[0]: #UNIMARKET TAB
                     close = data_yf["Close"],
                 )
             )
-            for x in ["Open", "High", "Low", "Close"]:
+            for x in ["Open", "High", "Low", "Close", "Volume"]:
                 if checkboxes_grid.checkbox(x):
                     fig.add_trace(
                         go.Scatter(
@@ -246,7 +264,7 @@ with main_tabs[1]: #INFORMATIONS TAB
         "$$\\textbf{Company Officers}$$",
     ])
     with tabs[0]:
-        st.write("$$\\huge{\\textbf{Summary}}$$")
+        st.write("$$\\underline{\\huge{\\textbf{Summary}}}$$")
         #This method below was made to avoid the company name to stay apart of the rest of the paragraph
         try:
             join_string = False
@@ -263,7 +281,7 @@ with main_tabs[1]: #INFORMATIONS TAB
         except:
             st.write("No informations.")
     with tabs[1]:
-        st.write("$$\\huge{\\textbf{Company Officers}}$$")
+        st.write("$$\\underline{\\huge{\\textbf{Company Officers}}}$$")
         try:
             st.dataframe(
                 pd.DataFrame(ticker_yf.info["companyOfficers"]).drop("maxAge", axis = 1),
@@ -286,7 +304,7 @@ with main_tabs[2]: #INDICATORS TAB
     ]
     subtabs = st.tabs(subtab_names)
     with subtabs[0]:
-        st.write("$$\\huge{\\textbf{Main Indicators}}$$")
+        st.write("$$\\underline{\\huge{\\textbf{Main Indicators}}}$$")
         try:
             indicators = {}
             for x in ticker_yf.info.keys():
@@ -345,7 +363,7 @@ with main_tabs[2]: #INDICATORS TAB
         except:
             pass
     with subtabs[1]:
-        st.write("$$\\huge{\\textbf{ESG Scores}}$$")
+        st.write("$$\\underline{\\huge{\\textbf{ESG Scores}}}$$")
         indicators_num, indicators_str = {}, {}
         try:
             for x in ticker_yq.esg_scores[element].keys():
@@ -377,7 +395,7 @@ with main_tabs[2]: #INDICATORS TAB
         except:
             st.write("No informations.")
     with subtabs[2]:
-        st.write("$$\\huge{\\textbf{Grading History}}$$")
+        st.write("$$\\underline{\\huge{\\textbf{Grading History}}}$$")
         try:
             st.dataframe(
                 ticker_yq.grading_history,
@@ -386,7 +404,7 @@ with main_tabs[2]: #INDICATORS TAB
         except:
             st.write("No informations.")
     with subtabs[3]:
-        st.write("$$\\huge{\\textbf{Institutional Ownership}}$$")
+        st.write("$$\\underline{\\huge{\\textbf{Institutional Ownership}}}$$")
         try:
             st.dataframe(
                 ticker_yq.institution_ownership.drop("maxAge", axis = 1),
@@ -395,7 +413,7 @@ with main_tabs[2]: #INDICATORS TAB
         except:
             st.write("No informations.")
     with subtabs[4]:
-        st.write("$$\\huge{\\textbf{Key Stats}}$$")
+        st.write("$$\\underline{\\huge{\\textbf{Key Stats}}}$$")
         indicators_num, indicators_str = {}, {}
         try:
             for x in ticker_yq.key_stats[element].keys():
@@ -442,7 +460,7 @@ with main_tabs[2]: #INDICATORS TAB
         except:
             st.write("No informations.")
     with subtabs[5]:
-        st.write("$$\\huge{\\textbf{Price}}$$")
+        st.write("$$\\underline{\\huge{\\textbf{Price}}}$$")
         indicators_num, indicators_str = {}, {}
         try:
             for x in ticker_yq.price[element].keys():
@@ -504,7 +522,7 @@ with main_tabs[2]: #INDICATORS TAB
             except:
                 st.write("No informations.")
     with subtabs[6]:
-        st.write("$$\\huge{\\textbf{SEC Filings}}$$")
+        st.write("$$\\underline{\\huge{\\textbf{SEC Filings}}}$$")
         try:
             sec_filings = ticker_yq.sec_filings.reset_index()
             sec_filings_exhibits = pd.json_normalize(sec_filings["exhibits"])
@@ -523,7 +541,7 @@ with main_tabs[2]: #INDICATORS TAB
         except:
             st.write("No informations.")
     with subtabs[7]:
-        st.write("$$\\huge{\\textbf{Share Purchase Activity}}$$")
+        st.write("$$\\underline{\\huge{\\textbf{Share Purchase Activity}}}$$")
         indicators = {}
         try:
             for x in ticker_yq.share_purchase_activity[element].keys():
@@ -549,13 +567,13 @@ with main_tabs[2]: #INDICATORS TAB
         except:
             st.write("No informations.")
     with subtabs[8]:
-        st.write("$$\\huge{\\textbf{Quotes}}$$")
+        st.write("$$\\underline{\\huge{\\textbf{Quotes}}}$$")
         try:
             st.write(ticker_yq.quotes)
         except:
             st.write("No informations.")
     with subtabs[9]:
-        st.write("$$\\huge{\\textbf{Recommendations (Score)}}$$")
+        st.write("$$\\underline{\\huge{\\textbf{Recommendations (Score)}}}$$")
         try:
             recommended_symbols = pd.DataFrame(ticker_yq.recommendations[element]["recommendedSymbols"])
             grid1 = grid(recommended_symbols.shape[0], vertical_align = True)
@@ -570,7 +588,7 @@ with main_tabs[2]: #INDICATORS TAB
         except:
             st.write("No informations.")
 with main_tabs[3]: #NEWS TAB
-    st.write("$$\\huge{\\textbf{Latest News}}$$")
+    st.write("$$\\underline{\\huge{\\textbf{Latest News}}}$$")
     try:
         get_news(ticker_yf.news)
     except:
@@ -598,7 +616,7 @@ with main_tabs[4]: #FINANCIAL TAB
             "Financial Data"
         ])
         with subsubtabs[0]:
-            st.write("$$\\huge{\\textbf{Financials}}$$")
+            st.write("$$\\underline{\\huge{\\textbf{Financials}}}$$")
             information = ticker_yf.financials.transpose()
             filterbox = st.selectbox(
                 label = "Feature",
@@ -615,7 +633,7 @@ with main_tabs[4]: #FINANCIAL TAB
                 fig,
                 use_container_width = True)
         with subsubtabs[1]:
-            st.write("$$\\huge{\\textbf{Quarterly Financials}}$$")
+            st.write("$$\\underline{\\huge{\\textbf{Quarterly Financials}}}$$")
             information = ticker_yf.quarterly_financials.transpose()
             filterbox = st.selectbox(
                 label = "Feature",
@@ -632,7 +650,7 @@ with main_tabs[4]: #FINANCIAL TAB
                 fig,
                 use_container_width = True)
         with subsubtabs[2]:
-            st.write("$$\\huge{\\textbf{Financial Data}}$$")
+            st.write("$$\\underline{\\huge{\\textbf{Financial Data}}}$$")
             informations = {}
             try:
                 for x in ticker_yq.financial_data[element].keys():
@@ -662,7 +680,7 @@ with main_tabs[4]: #FINANCIAL TAB
             "Income Statement Data"
         ])
         with subsubtabs[0]:
-            st.write("$$\\huge{\\textbf{Income Statement}}$$")
+            st.write("$$\\underline{\\huge{\\textbf{Income Statement}}}$$")
             information = ticker_yf.income_stmt.transpose()
             filterbox = st.selectbox(
                 label = "Feature",
@@ -679,7 +697,7 @@ with main_tabs[4]: #FINANCIAL TAB
                 fig,
                 use_container_width = True)
         with subsubtabs[1]:
-            st.write("$$\\huge{\\textbf{Quarterly Income Statement}}$$")
+            st.write("$$\\underline{\\huge{\\textbf{Quarterly Income Statement}}}$$")
             information = ticker_yf.income_stmt.transpose()
             filterbox = st.selectbox(
                 label = "Feature",
@@ -696,7 +714,7 @@ with main_tabs[4]: #FINANCIAL TAB
                 fig,
                 use_container_width = True)
         with subsubtabs[2]:
-            st.write("$$\\huge{\\textbf{Income Statement Data}}$$")
+            st.write("$$\\underline{\\huge{\\textbf{Income Statement Data}}}$$")
             try:
                 st.dataframe(
                     ticker_yq.income_statement().reset_index().transpose().reset_index(),
@@ -712,7 +730,7 @@ with main_tabs[4]: #FINANCIAL TAB
             "Balance Sheet Data"
         ])
         with subsubtabs[0]:
-            st.write("$$\\huge{\\textbf{Balance Sheet}}$$")
+            st.write("$$\\underline{\\huge{\\textbf{Balance Sheet}}}$$")
             information = ticker_yf.balance_sheet.transpose()
             filterbox = st.selectbox(
                 label = "Feature",
@@ -729,7 +747,7 @@ with main_tabs[4]: #FINANCIAL TAB
                 fig,
                 use_container_width = True)
         with subsubtabs[1]:
-            st.write("$$\\huge{\\textbf{Quarterly Balance Sheet}}$$")
+            st.write("$$\\underline{\\huge{\\textbf{Quarterly Balance Sheet}}}$$")
             information = ticker_yf.quarterly_balance_sheet.transpose()
             filterbox = st.selectbox(
                 label = "Feature",
@@ -746,7 +764,7 @@ with main_tabs[4]: #FINANCIAL TAB
                 fig,
                 use_container_width = True)
         with subsubtabs[2]:
-            st.write("$$\\huge{\\textbf{Balance Sheet Data}}$$")
+            st.write("$$\\underline{\\huge{\\textbf{Balance Sheet Data}}}$$")
             try:
                 st.dataframe(
                     ticker_yq.balance_sheet().reset_index().transpose().reset_index(),
@@ -762,7 +780,7 @@ with main_tabs[4]: #FINANCIAL TAB
             "Cash Flow Data"
         ])
         with subsubtabs[0]:
-            st.write("$$\\huge{\\textbf{Cash Flow}}$$")
+            st.write("$$\\underline{\\huge{\\textbf{Cash Flow}}}$$")
             information = ticker_yf.cash_flow.transpose()
             filterbox = st.selectbox(
                 label = "Feature",
@@ -779,7 +797,7 @@ with main_tabs[4]: #FINANCIAL TAB
                 fig,
                 use_container_width = True)
         with subsubtabs[1]:
-            st.write("$$\\huge{\\textbf{Quarterly Cash Flow}}$$")
+            st.write("$$\\underline{\\huge{\\textbf{Quarterly Cash Flow}}}$$")
             information = ticker_yf.quarterly_cash_flow.transpose()
             filterbox = st.selectbox(
                 label = "Feature",
@@ -796,7 +814,7 @@ with main_tabs[4]: #FINANCIAL TAB
                 fig,
                 use_container_width = True)
         with subsubtabs[2]:
-            st.write("$$\\huge{\\textbf{Cash Flow Data}}$$")
+            st.write("$$\\underline{\\huge{\\textbf{Cash Flow Data}}}$$")
             try:
                 st.dataframe(
                     ticker_yq.cash_flow().reset_index().transpose().reset_index(),
@@ -815,31 +833,25 @@ with main_tabs[4]: #FINANCIAL TAB
             "Major Holders Data"
         ])
         with subsubtabs[0]:
-            st.write("$$\\huge{\\textbf{Major Holders}}$$")
+            st.write("$$\\underline{\\huge{\\textbf{Major Holders}}}$$")
             major_holders = ticker_yf.major_holders
-            grid1 = grid(major_holders.shape[0], vertical_align = True)
-            for x in major_holders.iterrows():
-                grid1.metric(
-                    label = str(x[1][1]),
-                    value = str(x[1][0])
-                )
-            style_metric_cards(
-                background_color = "#000000"
-            )
+            st.dataframe(
+                major_holders,
+                hide_index = True)
         with subsubtabs[1]:
-            st.write("$$\\huge{\\textbf{Institutional Holders}}$$")
+            st.write("$$\\underline{\\huge{\\textbf{Institutional Holders}}}$$")
             st.dataframe(
                 ticker_yf.institutional_holders,
                 hide_index = True,
                 use_container_width = True)
         with subsubtabs[2]:
-            st.write("$$\\huge{\\textbf{Mutual Fund Holders}}$$")
+            st.write("$$\\underline{\\huge{\\textbf{Mutual Fund Holders}}}$$")
             st.dataframe(
                 ticker_yf.mutualfund_holders,
                 hide_index = True,
                 use_container_width = True)
         with subsubtabs[3]:
-            st.write("$$\\huge{\\textbf{Insider Holders}}$$")
+            st.write("$$\\underline{\\huge{\\textbf{Insider Holders}}}$$")
             try:
                 st.dataframe(
                     ticker_yq.insider_holders.drop("maxAge", axis = 1),
@@ -848,7 +860,7 @@ with main_tabs[4]: #FINANCIAL TAB
             except:
                 st.write("No informations.")
         with subsubtabs[4]:
-            st.write("$$\\huge{\\textbf{Insider Transactions}}$$")
+            st.write("$$\\underline{\\huge{\\textbf{Insider Transactions}}}$$")
             try:
                 st.dataframe(
                     ticker_yq.insider_transactions.drop("maxAge", axis = 1),
@@ -857,7 +869,7 @@ with main_tabs[4]: #FINANCIAL TAB
             except:
                 st.write("No informations.")
         with subsubtabs[5]:
-            st.write("$$\\huge{\\textbf{Major Holders Data}}$$")
+            st.write("$$\\underline{\\huge{\\textbf{Major Holders Data}}}$$")
             try:
                 indicators = {}
                 for x in ticker_yq.major_holders[element].keys():
@@ -889,7 +901,7 @@ with main_tabs[4]: #FINANCIAL TAB
             "Earnings Trend"
         ])
         with subsubtabs[0]:
-            st.write("$$\\huge{\\textbf{Earnings Dates}}$$")
+            st.write("$$\\underline{\\huge{\\textbf{Earnings Dates}}}$$")
             try:
                 information = ticker_yf.earnings_dates.reset_index()
                 filterbox = st.selectbox(
@@ -937,7 +949,7 @@ with main_tabs[4]: #FINANCIAL TAB
             except:
                 st.write("No informations.")
     with subtabs_[6]:
-        st.write("$$\\huge{\\textbf{Valuation Measures}}$$")
+        st.write("$$\\underline{\\huge{\\textbf{Valuation Measures}}}$$")
         try:
             st.dataframe(
                 ticker_yq.valuation_measures,
@@ -947,7 +959,7 @@ with main_tabs[4]: #FINANCIAL TAB
         except:
             st.write("No informations.")
     with subtabs_[7]:
-        st.write("$$\\huge{\\textbf{Shares Full}}$$")
+        st.write("$$\\underline{\\huge{\\textbf{Shares Full}}}$$")
         try:
             information = ticker_yf.get_shares_full().transpose()
             fig = px.bar(
@@ -972,7 +984,7 @@ with main_tabs[4]: #FINANCIAL TAB
             x.replace("_", " ").upper() for x in attrs])
         for i, attr in enumerate(attrs):
             with subtabs[i]:
-                st.write("$$\\huge{\\textbf{" + attr.replace('_', ' ').capitalize() + "}}$$")
+                st.write("$$\\underline{\\huge{\\textbf{" + attr.replace('_', ' ').capitalize() + "}}}$$")
                 try:
                     st.dataframe(ticker_yf.__getattribute__(attr)())
                 except:
@@ -986,7 +998,7 @@ with main_tabs[4]: #FINANCIAL TAB
             "Recommendation Trend"
         ])
         with subsubtabs[0]:
-            st.write("$$\\huge{\\textbf{Index Trend}}$$")
+            st.write("$$\\underline{\\huge{\\textbf{Index Trend}}}$$")
             indicators = {}
             try:
                 for x in ticker_yq.index_trend[element].keys():
@@ -1030,7 +1042,7 @@ with main_tabs[4]: #FINANCIAL TAB
             except:
                 st.write("No informations.")
     with subtabs_[10]:
-        st.write("$$\\huge{\\textbf{Option Chain}}$$")
+        st.write("$$\\underline{\\huge{\\textbf{Option Chain}}}$$")
         try:
             st.dataframe(
                 ticker_yq.option_chain,
@@ -1044,7 +1056,7 @@ with main_tabs[4]: #FINANCIAL TAB
             "Corporate Events"
         ])
         with subsubtabs[0]:
-            st.write("$$\\huge{\\textbf{Calendar Events}}$$")
+            st.write("$$\\underline{\\huge{\\textbf{Calendar Events}}}$$")
             try:
                 st.dataframe(
                     pd.json_normalize(ticker_yq.calendar_events[element]).transpose().reset_index(),
@@ -1054,7 +1066,7 @@ with main_tabs[4]: #FINANCIAL TAB
             except:
                 st.write("No informations.")
         with subsubtabs[1]:
-            st.write("$$\\huge{\\textbf{Corporate Events}}$$")
+            st.write("$$\\underline{\\huge{\\textbf{Corporate Events}}}$$")
             try:
                 st.dataframe(
                     ticker_yq.corporate_events,
@@ -1076,51 +1088,145 @@ with main_tabs[5]: #TECHNICAL INSIGHTS TAB
     ]
     tabs = st.tabs(tab_names)
     with tabs[0]:
-        st.write("$$\\huge{\\textbf{Instrument Info}}$$")
-        st.write("   ")
+        st.write("$$\\underline{\\huge{\\textbf{Instrument Info}}}$$")
         try:
             instrument_info = ticker_yq.technical_insights[element]["instrumentInfo"]
-            st.write(instrument_info)
+            st.write("   ")
+            st.write("   ")
+            cols1 = grid(3, vertical_align = True)
+            with cols1.expander(
+                    label = "Technical Events",
+                    expanded = True
+                ):
+                st.latex("\\Large{\\textbf{Technical Events}}")
+                st.write("$$\\large{\\textbf{Provider:  }}$$" + instrument_info["technicalEvents"]["provider"])
+                st.write("$$\\large{\\textbf{Sector:  }}$$" + instrument_info["technicalEvents"]["sector"])
+            with cols1.expander(
+                    label = "Key Technicals",
+                    expanded = True
+                ):
+                st.latex("\\Large{\\textbf{Key Technicals}}")
+                for key, value in instrument_info["keyTechnicals"].items():
+                    st.write("$$\\large{\\textbf{" + split_key_name(str(key)) + ":  }}$$" + str(value))
+            with cols1.expander(
+                    label = "Valuation",
+                    expanded = True
+                ):
+                st.latex("\\Large{\\textbf{Valuation}}")
+                for key, value in instrument_info["valuation"].items():
+                    st.write("$$\\large{\\textbf{" + split_key_name(str(key)) + ":  }}$$" + str(value))
+            st.divider()
+            cols2 = grid(3, vertical_align = True)
+            with cols2.expander(
+                    label = "Short Term Outlook",
+                    expanded = True
+                ):
+                st.latex("\\large{\\textbf{Short Term Outlook}}")
+                for key, value in instrument_info["technicalEvents"]["shortTermOutlook"].items():
+                    st.write("$$\\large{\\textbf{" + split_key_name(str(key)) + ":  }}$$" + str(value))
+            with cols2.expander(
+                label = "Intermediate Term Outlook",
+                expanded = True
+            ):
+                st.latex("\\large{\\textbf{Intermediate Term Outlook}}")
+                for key, value in instrument_info["technicalEvents"]["intermediateTermOutlook"].items():
+                    st.write("$$\\large{\\textbf{" + split_key_name(str(key)) + ":  }}$$" + str(value))
+            with cols2.expander(
+                label = "Long Term Outlook",
+                expanded = True
+            ):
+                st.latex("\\large{\\textbf{Long Term Outlook}}")
+                for key, value in instrument_info["technicalEvents"]["longTermOutlook"].items():
+                    st.write("$$\\large{\\textbf{" + split_key_name(str(key)) + ":  }}$$" + str(value))
         except:
             st.write("No informations.")
     with tabs[1]:
-        st.write("$$\\huge{\\textbf{Company Snapshot}}$$")
+        st.write("$$\\underline{\\huge{\\textbf{Company Snapshot}}}$$")
         try:
-            st.write(ticker_yq.technical_insights[element]["companySnapshot"])
+            company_snapshot = ticker_yq.technical_insights[element]["companySnapshot"]
+            st.write("   ")
+            st.write("   ")
+            st.write("$$\\large{\\textbf{Sector Info:  }}$$" + company_snapshot["sectorInfo"])
+            cols = grid(2, vertical_align = True)
+            with cols.expander(
+                label = "Company",
+                expanded = True
+            ):
+                st.latex("\\large{\\textbf{Company}}")
+                for key, value in company_snapshot["company"].items():
+                    st.write("$$\\large{\\textbf{" + split_key_name(str(key)) + ":  }}$$" + str(value))
+            with cols.expander(
+                label = "Sector",
+                expanded = True
+            ):
+                st.latex("\\large{\\textbf{Sector}}")
+                for key, value in company_snapshot["sector"].items():
+                    st.write("$$\\large{\\textbf{" + split_key_name(str(key)) + ":  }}$$" + str(value))
         except:
             st.write("No informations.")
     with tabs[2]:
-        st.write("$$\\huge{\\textbf{Recommendation}}$$")
+        st.write("$$\\underline{\\huge{\\textbf{Recommendation}}}$$")
         try:
-            st.write(ticker_yq.technical_insights[element]["recommendation"])
+            recommendation = ticker_yq.technical_insights[element]["recommendation"]
+            st.write("   ")
+            st.write("   ")
+            for key, value in recommendation.items():
+                st.write("$$\\large{\\textbf{" + split_key_name(str(key)) + ":  }}$$" + str(value))
         except:
             st.write("No informations.")
     with tabs[3]:
-        st.write("$$\\huge{\\textbf{Upsell}}$$")
+        st.write("$$\\underline{\\huge{\\textbf{Upsell}}}$$")
         try:
-            st.write(ticker_yq.technical_insights[element]["upsell"])
+            upsell = ticker_yq.technical_insights[element]["upsell"]
+            for x in [
+                "companyName", 
+                "msBullishBearishSummariesPublishDate",
+                "upsellReportType"]:
+                if type(upsell[x]) == int:
+                    upsell[x] = dt.datetime.fromtimestamp(upsell[x]/1000)
+                    st.write("$$\\large{\\textbf{" + split_key_name(str(x)).replace("Ms ", "").capitalize() + ":  }}$$" + str(upsell[x]))
+                else:
+                    st.write("$$\\large{\\textbf{" + split_key_name(str(x)).replace("Ms ", "").capitalize() + ":  }}$$" + str(upsell[x]))
+            st.write("$$\\large{\\textbf{Bullish Summary}}$$")
+            for i, x in enumerate(upsell["msBullishSummary"]):
+                st.write(f"**{i+1}) {x}**")
+            st.write("$$\\large{\\textbf{Bearish Summary}}$$")
+            for i, x in enumerate(upsell["msBearishSummary"]):
+                st.write(f"**{i+1}) {x}**")
         except:
             st.write("No informations.")
     with tabs[4]:
-        st.write("$$\\huge{\\textbf{Upsell Search}}$$")
+        st.write("$$\\underline{\\huge{\\textbf{Upsell Search}}}$$")
         try:
-            st.write(ticker_yq.technical_insights[element]["upsellSearchDD"])
+            upsell_search = ticker_yq.technical_insights[element]["upsellSearchDD"]
+            st.write("$$\\large{\\textbf{Research Reports}}$$")
+            for key, value in upsell_search["researchReports"].items():
+                st.write("$$\\large{\\textbf{" + split_key_name(str(key)) + ":  }}$$" + str(value))
         except:
             st.write("No informations.")
     with tabs[5]:
-        st.write("$$\\huge{\\textbf{Events}}$$")
+        st.write("$$\\underline{\\huge{\\textbf{Events}}}$$")
         try:
-            st.write(ticker_yq.technical_insights[element]["events"])
+            events = ticker_yq.technical_insights[element]["events"]
+            for event in events:
+                event_keys = [x for x in event.keys() if x != "imageUrl"]
+                for key in event_keys:
+                    if type(event[key]) == int:
+                        event[key] = dt.datetime.fromtimestamp(event[key]/1000)
+                        st.write("$$\\large{\\textbf{" + split_key_name(str(key)).replace("Ms ", "").capitalize() + ":  }}$$" + str(event[key]))
+                    else:
+                        st.write("$$\\large{\\textbf{" + split_key_name(str(key)).replace("Ms ", "").capitalize() + ":  }}$$" + str(event[key]))
+                st.divider()
         except:
             st.write("No informations.")
     with tabs[6]:
-        st.write("$$\\huge{\\textbf{Reports}}$$")
+        st.write("$$\\underline{\\huge{\\textbf{Reports}}}$$")
         try:
             get_reports(ticker_yq.technical_insights[element]["reports"])
         except:
             st.write("No informations.")
     with tabs[7]:
-        st.write("$$\\huge{\\textbf{SEC Reports}}$$")
+        st.write("$$\\underline{\\huge{\\textbf{SEC Reports}}}$$")
         try:
             get_sec_reports(ticker_yq.technical_insights[element]["secReports"])
         except:
