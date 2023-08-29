@@ -155,7 +155,7 @@ with st.sidebar:
 if asset_filter == "Stocks":
     currency = ticker_yf.info["currency"]
 
-st.write("$$\\text{" + element_filter.replace("^", "") + "}$$")
+st.write("$$\\text{" + element_filter.replace("^", "").replace("&", "\\&") + "}$$")
 
 main_tabs = st.tabs([
         "$$\\textbf{UNIMARKET}$$",
