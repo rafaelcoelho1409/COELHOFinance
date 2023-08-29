@@ -45,8 +45,8 @@ with st.expander(
 st.divider()
 st.markdown("""<div style='font-size:25px'>
 <h3>NEXT STEPS</h3>
-<b>- Return prices</b><br>
-<b>- YahooQuery:</b> Insert data from YahooQuery to complete the available data from YFinance (Python)<br>
+<b>- Advanced Statistics</b><br>
+<b>- Authentication system to avoid too many requests to Yahoo Finance APIs</b><br>
 <b>- Anomaly detection:</b> Anomaly detection to detect unusual 
 financial market movement (we are intending to
 create an alarm tool to allow you to configure a personal alert about these movements)<br>
