@@ -658,7 +658,7 @@ def stocks_filter_func2(periods_and_intervals):
             use_container_width = True
         )
         if market_button:
-            market_filter = st.session_state["market_filter"]
+            market_filter = st.session_state["market_filter2"]
     with st.form("search_form2"):
         market_data_yf = pd.json_normalize(
                 json.load(open(f"./data/symbols/{market_filter.lower()}.json", "r")))\
