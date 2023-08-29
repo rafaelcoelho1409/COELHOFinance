@@ -30,18 +30,21 @@ with st.expander(
             "assets/rafael_coelho_photo.jpeg",
             width = 300)
     with cols[1]:
-        card(
+        LINKEDIN = card(
             title = "LinkedIn",
             text = "",
             url = "https://www.linkedin.com/in/rafaelcoelho1409/"
         )
+        if LINKEDIN:
+            pass
     with cols[2]:
-        card(
+        GITHUB = card(
             title = "GitHub",
             text = "",
             url = "https://github.com/rafaelcoelho1409/"
         )
-
+        if GITHUB:
+            pass
 st.divider()
 st.markdown("""<div style='font-size:25px'>
 <h3>NEXT STEPS</h3>
