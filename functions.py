@@ -5,6 +5,10 @@ import datetime as dt
 import pandas as pd
 import json
 import investpy
+import plotly.graph_objects as go
+import plotly.express as px
+from PIL import Image
+import numpy as np
 from streamlit_extras.row import row
 from streamlit_extras.metric_cards import style_metric_cards
 from st_pages import show_pages, Page, Section, add_indentation
@@ -184,6 +188,33 @@ def split_key_name(string):
                 lambda y: y 
                 if y.islower() 
                 else " " + y, string)).capitalize()
+
+def image_link(image_source, html_source):
+    fig = px.imshow(Image.open(image_source))
+    #fig.add_trace(px.imshow(
+    #    image_source
+    #))
+    fig.update_layout(
+        annotations = [dict(
+                #x = -0.085, 
+                #y = 1,
+                #sizex = 0.15, 
+                #sizey = 0.15,
+                xanchor = "center", 
+                yanchor = "middle"
+                )])
+    fig.update_layout(annotations = [dict(
+    text=f"<a href='{html_source}' style='opacity:0'>link</a>",
+        font = dict(size=50),
+        x = -0.065, 
+        y=1,
+        showarrow=False,
+        xref="paper", 
+        yref="paper",                                         
+        xanchor="center", 
+        yanchor="middle"
+    )])
+    return fig
 
 def stocks_filter_func(periods_and_intervals):
     with st.form("market_form"):
