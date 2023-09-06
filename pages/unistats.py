@@ -29,7 +29,10 @@ from adtk.data import validate_series
 from adtk.detector import (
     SeasonalAD,
     ThresholdAD,
-    QuantileAD)
+    QuantileAD,
+    InterQuartileRangeAD,
+    GeneralizedESDTestAD
+    )
 #STREAMLIT THIRD-PARTY
 from streamlit_extras.grid import grid
 #internal functions
@@ -1193,7 +1196,9 @@ with main_tabs[3]:
         options = [
             "Seasonal",
             "Threshold",
-            "Quantile"
+            "Quantile",
+            "Inter Quartile Range",
+            "Generalized Extreme Studentized Deviate (ESD)"
             ]
     )
     idx = pd.date_range(data_yf.index[0], data_yf.index[-1])
@@ -1277,7 +1282,6 @@ with main_tabs[3]:
         )
     elif ad_model == "Quantile":
         grid2 = grid(2, vertical_align = True)
-        st.write(data_yf[feature].min())
         low_threshold = grid2.slider(
             label = "Low (Quantile)",
             min_value = 0.0,
@@ -1321,3 +1325,81 @@ with main_tabs[3]:
             fig,
             use_container_width = True
         )
+    elif ad_model == "Inter Quartile Range":
+        grid2 = grid(1, vertical_align = True)
+        IQR = grid2.slider(
+            label = "Inter Quartile Range",
+            min_value = 0.0,
+            max_value = 3.0,
+            value = 0.0
+        )
+        interquartile_ad = InterQuartileRangeAD(
+            c = IQR
+        )
+        anomalies = interquartile_ad.fit_detect(ad_data)
+        anomalies = anomalies[anomalies == True]
+        anomalies = data_yf[data_yf.index.isin(anomalies.index)][feature]
+        fig = go.Figure()
+        fig.add_trace(
+            go.Scatter(
+                x = data_yf.index,
+                y = data_yf[feature],
+                mode = "lines",
+                name = feature
+            )
+        )
+        fig.add_trace(
+            go.Scatter(
+                x = anomalies.index,
+                y = anomalies,
+                mode = "markers",
+                marker = {
+                    "color": "red"
+                },
+                name = "Anomalies"
+            )
+        )
+        st.plotly_chart(
+            fig,
+            use_container_width = True
+        )
+    elif ad_model == "Generalized Extreme Studentized Deviate (ESD)":
+        grid2 = grid(1, vertical_align = True)
+        alpha = grid2.slider(
+            label = "Alpha",
+            min_value = 0.0,
+            max_value = 1.0,
+            value = 0.3,
+            step = 0.1
+        )
+        gesd_ad = GeneralizedESDTestAD(
+            alpha = alpha
+        )
+        anomalies = gesd_ad.fit_detect(ad_data)
+        anomalies = anomalies[anomalies == True]
+        anomalies = data_yf[data_yf.index.isin(anomalies.index)][feature]
+        fig = go.Figure()
+        fig.add_trace(
+            go.Scatter(
+                x = data_yf.index,
+                y = data_yf[feature],
+                mode = "lines",
+                name = feature
+            )
+        )
+        fig.add_trace(
+            go.Scatter(
+                x = anomalies.index,
+                y = anomalies,
+                mode = "markers",
+                marker = {
+                    "color": "red"
+                },
+                name = "Anomalies"
+            )
+        )
+        st.plotly_chart(
+            fig,
+            use_container_width = True
+        )
+        
