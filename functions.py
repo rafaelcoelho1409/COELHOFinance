@@ -5,10 +5,9 @@ import datetime as dt
 import pandas as pd
 import json
 import investpy
-import plotly.graph_objects as go
-import plotly.express as px
-from PIL import Image
 import numpy as np
+#ANOMALY DETECTION
+from adtk.data import validate_series
 from streamlit_extras.row import row
 from streamlit_extras.metric_cards import style_metric_cards
 from st_pages import show_pages, Page, Section, add_indentation
@@ -32,6 +31,20 @@ def get_unimarket(
     return (
         ticker, 
         data)
+
+@st.cache_resource
+def get_unistats(
+    element, 
+    period,
+    interval,
+    source = None):
+    ticker = yf.Ticker(element)
+    data = yf.download(
+        element,
+        period = period,
+        interval = interval
+    )
+    return ticker, data
 
 @st.cache_resource
 def get_multimarket(
@@ -178,10 +191,14 @@ def option_menu():
         Page("app.py", "COELHO Finance"),
         Section("Market Analytics"),
         Page("pages/unimarket.py", "UNIMARKET"),
+        Page("pages/unistats.py", "UNISTATS"),
         Page("pages/multimarket.py", "MULTIMARKET"),
         Page("pages/about.py", "About Us", in_section = False),
     ])
     add_indentation()
+
+def realized_volatility(x):
+    return np.sqrt(np.sum(x ** 2))
 
 def split_key_name(string):
     return ''.join(map(
@@ -189,34 +206,9 @@ def split_key_name(string):
                 if y.islower() 
                 else " " + y, string)).capitalize()
 
-def image_link(image_source, html_source):
-    fig = px.imshow(Image.open(image_source))
-    #fig.add_trace(px.imshow(
-    #    image_source
-    #))
-    fig.update_layout(
-        annotations = [dict(
-                #x = -0.085, 
-                #y = 1,
-                #sizex = 0.15, 
-                #sizey = 0.15,
-                xanchor = "center", 
-                yanchor = "middle"
-                )])
-    fig.update_layout(annotations = [dict(
-    text=f"<a href='{html_source}' style='opacity:0'>link</a>",
-        font = dict(size=50),
-        x = -0.065, 
-        y=1,
-        showarrow=False,
-        xref="paper", 
-        yref="paper",                                         
-        xanchor="center", 
-        yanchor="middle"
-    )])
-    return fig
-
-def stocks_filter_func(periods_and_intervals):
+def stocks_filter_func(
+    periods_and_intervals, 
+    page_title):
     with st.form("market_form"):
         market_filter = st.selectbox(
             label = "Market",
@@ -259,21 +251,26 @@ def stocks_filter_func(periods_and_intervals):
             index = 5,
             key = "period_filter"
         )
-        interval_filter = st.selectbox(
-            label = "Interval",
-            placeholder = "Interval",
-            options = periods_and_intervals[1]["interval"],
-            index = 8,
-            key = "interval_filter"
-        )
+        if page_title == "COELHO Finance - UNISTATS":
+            interval_filter = "1 day"
+        else:
+            interval_filter = st.selectbox(
+                label = "Interval",
+                placeholder = "Interval",
+                options = periods_and_intervals[1]["interval"],
+                index = 8,
+                key = "interval_filter"
+            )
         search_button = st.form_submit_button(
             label = "Search",
             use_container_width = True
         )
         if search_button:
-            #stock = stock
             period_filter = st.session_state["period_filter"]
-            interval_filter = st.session_state["interval_filter"]
+            try:
+                interval_filter = st.session_state["interval_filter"]
+            except:
+                pass
         return (
             element,
             period_filter,
@@ -285,7 +282,9 @@ def stocks_filter_func(periods_and_intervals):
             short_name
         )
     
-def indices_filter_func(periods_and_intervals):
+def indices_filter_func(
+    periods_and_intervals,
+    page_title):
     index_data = investpy.indices.get_indices()
     index_data["options"] = index_data["symbol"] + " - " + index_data["name"]
     index_data["country"] = index_data["country"].str.upper()
@@ -329,20 +328,26 @@ def indices_filter_func(periods_and_intervals):
                 index = 5,
                 key = "period_filter"
             )
-            interval_filter = st.selectbox(
-                label = "Interval",
-                placeholder = "Interval",
-                options = periods_and_intervals[1]["interval"],
-                index = 8,
-                key = "interval_filter"
-            )
+            if page_title == "COELHO Finance - UNISTATS":
+                interval_filter = "1 day"
+            else:
+                interval_filter = st.selectbox(
+                    label = "Interval",
+                    placeholder = "Interval",
+                    options = periods_and_intervals[1]["interval"],
+                    index = 8,
+                    key = "interval_filter"
+                )
             search_button = st.form_submit_button(
                 label = "Search",
                 use_container_width = True
             )
             if search_button:
                 period_filter = st.session_state["period_filter"]
+            try:
                 interval_filter = st.session_state["interval_filter"]
+            except:
+                pass
     return (
         index,
         period_filter,
@@ -353,7 +358,9 @@ def indices_filter_func(periods_and_intervals):
         currency
     )
 
-def bonds_filter_func(periods_and_intervals):
+def bonds_filter_func(
+    periods_and_intervals,
+    page_title):
     bond_data = pd.read_json("./data/bonds.json")
     bond_data["options"] = bond_data["Symbol"] + " - " + bond_data["Name"]
     with st.expander(
@@ -376,20 +383,26 @@ def bonds_filter_func(periods_and_intervals):
                 index = 5,
                 key = "period_filter"
             )
-            interval_filter = st.selectbox(
-                label = "Interval",
-                placeholder = "Interval",
-                options = periods_and_intervals[1]["interval"],
-                index = 8,
-                key = "interval_filter"
-            )
+            if page_title == "COELHO Finance - UNISTATS":
+                interval_filter = "1 day"
+            else:
+                interval_filter = st.selectbox(
+                    label = "Interval",
+                    placeholder = "Interval",
+                    options = periods_and_intervals[1]["interval"],
+                    index = 8,
+                    key = "interval_filter"
+                )
             search_button = st.form_submit_button(
                 label = "Search",
                 use_container_width = True
             )
             if search_button:
                 period_filter = st.session_state["period_filter"]
+            try:
                 interval_filter = st.session_state["interval_filter"]
+            except:
+                pass
     return (
         bond,
         period_filter,
@@ -398,7 +411,9 @@ def bonds_filter_func(periods_and_intervals):
         long_name,
     )
 
-def commodities_filter_func(periods_and_intervals):
+def commodities_filter_func(
+    periods_and_intervals,
+    page_title):
     commodity_data = pd.read_json("./data/commodities.json")
     commodity_data["options"] = commodity_data["Symbol"] + " - " + commodity_data["Name"]
     with st.expander(
@@ -421,20 +436,26 @@ def commodities_filter_func(periods_and_intervals):
                 index = 5,
                 key = "period_filter"
             )
-            interval_filter = st.selectbox(
-                label = "Interval",
-                placeholder = "Interval",
-                options = periods_and_intervals[1]["interval"],
-                index = 8,
-                key = "interval_filter"
-            )
+            if page_title == "COELHO Finance - UNISTATS":
+                interval_filter = "1 day"
+            else:
+                interval_filter = st.selectbox(
+                    label = "Interval",
+                    placeholder = "Interval",
+                    options = periods_and_intervals[1]["interval"],
+                    index = 8,
+                    key = "interval_filter"
+                )
             search_button = st.form_submit_button(
                 label = "Search",
                 use_container_width = True
             )
             if search_button:
                 period_filter = st.session_state["period_filter"]
+            try:
                 interval_filter = st.session_state["interval_filter"]
+            except:
+                pass
     return (
         commodity,
         period_filter,
@@ -443,7 +464,9 @@ def commodities_filter_func(periods_and_intervals):
         long_name,
     )
 
-def funds_filter_func(periods_and_intervals):
+def funds_filter_func(
+    periods_and_intervals,
+    page_title):
     funds_data = investpy.funds.get_funds()
     funds_data["options"] = funds_data["symbol"] + " - " + funds_data["name"]
     funds_data["country"] = funds_data["country"].str.upper()
@@ -485,20 +508,26 @@ def funds_filter_func(periods_and_intervals):
                 index = 5,
                 key = "period_filter"
             )
-            interval_filter = st.selectbox(
-                label = "Interval",
-                placeholder = "Interval",
-                options = periods_and_intervals[1]["interval"],
-                index = 8,
-                key = "interval_filter"
-            )
+            if page_title == "COELHO Finance - UNISTATS":
+                interval_filter = "1 day"
+            else:
+                interval_filter = st.selectbox(
+                    label = "Interval",
+                    placeholder = "Interval",
+                    options = periods_and_intervals[1]["interval"],
+                    index = 8,
+                    key = "interval_filter"
+                )
             search_button = st.form_submit_button(
                 label = "Search",
                 use_container_width = True
             )
             if search_button:
                 period_filter = st.session_state["period_filter"]
+            try:
                 interval_filter = st.session_state["interval_filter"]
+            except:
+                pass
     return (
         fund,
         period_filter,
@@ -508,7 +537,9 @@ def funds_filter_func(periods_and_intervals):
         currency
     )
 
-def etfs_filter_func(periods_and_intervals):
+def etfs_filter_func(
+    periods_and_intervals,
+    page_title):
     etf_data = investpy.etfs.get_etfs()
     etf_data["options"] = etf_data["symbol"] + " - " + etf_data["name"]
     etf_data["country"] = etf_data["country"].str.upper()
@@ -551,20 +582,26 @@ def etfs_filter_func(periods_and_intervals):
                 index = 5,
                 key = "period_filter"
             )
-            interval_filter = st.selectbox(
-                label = "Interval",
-                placeholder = "Interval",
-                options = periods_and_intervals[1]["interval"],
-                index = 8,
-                key = "interval_filter"
-            )
+            if page_title == "COELHO Finance - UNISTATS":
+                interval_filter = "1 day"
+            else:
+                interval_filter = st.selectbox(
+                    label = "Interval",
+                    placeholder = "Interval",
+                    options = periods_and_intervals[1]["interval"],
+                    index = 8,
+                    key = "interval_filter"
+                )
             search_button = st.form_submit_button(
                 label = "Search",
                 use_container_width = True
             )
             if search_button:
                 period_filter = st.session_state["period_filter"]
+            try:
                 interval_filter = st.session_state["interval_filter"]
+            except:
+                pass
     return (
         etf,
         period_filter,
@@ -575,7 +612,9 @@ def etfs_filter_func(periods_and_intervals):
         currency
     )
 
-def currency_crosses_filter_func(periods_and_intervals):
+def currency_crosses_filter_func(
+    periods_and_intervals,
+    page_title):
     cc_data = investpy.currency_crosses.get_currency_crosses()
     cc_data["symbol_yf"] = cc_data["base"] + cc_data["second"] + "=X"
     with st.expander(
@@ -601,20 +640,26 @@ def currency_crosses_filter_func(periods_and_intervals):
                 index = 5,
                 key = "period_filter"
             )
-            interval_filter = st.selectbox(
-                label = "Interval",
-                placeholder = "Interval",
-                options = periods_and_intervals[1]["interval"],
-                index = 8,
-                key = "interval_filter"
-            )
+            if page_title == "COELHO Finance - UNISTATS":
+                interval_filter = "1 day"
+            else:
+                interval_filter = st.selectbox(
+                    label = "Interval",
+                    placeholder = "Interval",
+                    options = periods_and_intervals[1]["interval"],
+                    index = 8,
+                    key = "interval_filter"
+                )
             search_button = st.form_submit_button(
                 label = "Search",
                 use_container_width = True
             )
             if search_button:
                 period_filter = st.session_state["period_filter"]
+            try:
                 interval_filter = st.session_state["interval_filter"]
+            except:
+                pass
     return (
         cc,
         period_filter,
@@ -624,7 +669,9 @@ def currency_crosses_filter_func(periods_and_intervals):
         currency
     )
 
-def cryptos_filter_func(periods_and_intervals):
+def cryptos_filter_func(
+    periods_and_intervals,
+    page_title):
     crypto_data = investpy.crypto.get_cryptos()
     crypto_data["options"] = crypto_data["symbol"] + " - " + crypto_data["name"]
     crypto_data["symbol_yf"] = crypto_data["symbol"] + "-" + crypto_data["currency"]
@@ -650,20 +697,26 @@ def cryptos_filter_func(periods_and_intervals):
                 index = 5,
                 key = "period_filter"
             )
-            interval_filter = st.selectbox(
-                label = "Interval",
-                placeholder = "Interval",
-                options = periods_and_intervals[1]["interval"],
-                index = 8,
-                key = "interval_filter"
-            )
+            if page_title == "COELHO Finance - UNISTATS":
+                interval_filter = "1 day"
+            else:
+                interval_filter = st.selectbox(
+                    label = "Interval",
+                    placeholder = "Interval",
+                    options = periods_and_intervals[1]["interval"],
+                    index = 8,
+                    key = "interval_filter"
+                )
             search_button = st.form_submit_button(
                 label = "Search",
                 use_container_width = True
             )
             if search_button:
                 period_filter = st.session_state["period_filter"]
+            try:
                 interval_filter = st.session_state["interval_filter"]
+            except:
+                pass
     return (
         crypto,
         period_filter,
@@ -1219,4 +1272,7 @@ def commodities_filter_func2(periods_and_intervals):
         long_name,
         feature_filter
     )
+
+
+
 

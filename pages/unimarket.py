@@ -1,9 +1,7 @@
 import streamlit as st
 import json
-import investpy
 import datetime as dt
 import pandas as pd
-import yfinance as yf
 import plotly.graph_objects as go
 import plotly.express as px
 #STREAMLIT THIRD-PARTY
@@ -28,8 +26,9 @@ from functions import (
     commodities_filter_func,
     split_key_name)
 
+PAGE_TITLE = "COELHO Finance - UNIMARKET"
 st.set_page_config(
-    page_title = "COELHO Finance - UNIMARKET",
+    page_title = PAGE_TITLE,
     layout = "wide"
 )
 
@@ -66,7 +65,9 @@ with st.sidebar:
             quote_type,
             long_name,
             short_name
-        ) = stocks_filter_func(periods_and_intervals)
+        ) = stocks_filter_func(
+            periods_and_intervals,
+            PAGE_TITLE)
     elif asset_filter == "Indices":
         (
             element,
@@ -76,7 +77,9 @@ with st.sidebar:
             exchange,
             long_name,
             currency
-        ) = indices_filter_func(periods_and_intervals)
+        ) = indices_filter_func(
+            periods_and_intervals,
+            PAGE_TITLE)
     elif asset_filter == "Funds":
         (
             element,
@@ -85,7 +88,9 @@ with st.sidebar:
             element_filter,
             exchange,
             currency
-        ) = funds_filter_func(periods_and_intervals)
+        ) = funds_filter_func(
+            periods_and_intervals,
+            PAGE_TITLE)
     elif asset_filter == "ETFs":
         (
             element,
@@ -95,7 +100,9 @@ with st.sidebar:
             exchange,
             long_name,
             currency
-        ) = etfs_filter_func(periods_and_intervals)
+        ) = etfs_filter_func(
+            periods_and_intervals,
+            PAGE_TITLE)
     elif asset_filter == "Currency Crosses":
         (
             element,
@@ -104,7 +111,9 @@ with st.sidebar:
             element_filter,
             long_name,
             currency
-        ) = currency_crosses_filter_func(periods_and_intervals)
+        ) = currency_crosses_filter_func(
+            periods_and_intervals,
+            PAGE_TITLE)
     elif asset_filter == "Crypto":
         (
             element,
@@ -113,7 +122,9 @@ with st.sidebar:
             element_filter,
             long_name,
             currency
-        ) = cryptos_filter_func(periods_and_intervals)
+        ) = cryptos_filter_func(
+            periods_and_intervals,
+            PAGE_TITLE)
     elif asset_filter == "Bonds":
         (
             element,
@@ -121,7 +132,9 @@ with st.sidebar:
             interval_filter,
             element_filter,
             long_name
-        ) = bonds_filter_func(periods_and_intervals)
+        ) = bonds_filter_func(
+            periods_and_intervals,
+            PAGE_TITLE)
     elif asset_filter == "Commodities":
         (
             element,
@@ -129,7 +142,9 @@ with st.sidebar:
             interval_filter,
             element_filter,
             long_name
-        ) = commodities_filter_func(periods_and_intervals)
+        ) = commodities_filter_func(
+            periods_and_intervals,
+            PAGE_TITLE)
     else:
         st.write("$$\\textbf{UNDER CONSTRUCTION}$$")
         st.stop()

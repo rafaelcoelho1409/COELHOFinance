@@ -30,15 +30,20 @@ with st.expander(
     Get to know our financial analysis tools</h4><br>""",
     unsafe_allow_html = True
 )
-    grid2 = grid(2, vertical_align = True)
+    grid2 = grid(3, vertical_align = True)
     UNIMARKET = grid2.button(
         label = "$$\\textbf{UNIMARKET}$$",
+        use_container_width = True)
+    UNISTATS = grid2.button(
+        label = "$$\\textbf{UNISTATS}$$",
         use_container_width = True)
     MULTIMARKET = grid2.button(
         "$$\\textbf{MULTIMARKET}$$",
         use_container_width = True)
     if UNIMARKET:
         switch_page("UNIMARKET")
+    if UNISTATS:
+        switch_page("UNISTATS")
     if MULTIMARKET:
         switch_page("MULTIMARKET")  
 
