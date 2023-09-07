@@ -1233,34 +1233,37 @@ with main_tabs[3]:
         data = data.fillna(method = "ffill")
         ad_data = validate_series(data)
         if ad_model == "Seasonal":
-            seasonal_ad = SeasonalAD()
-            anomalies = seasonal_ad.fit_detect(ad_data)
-            anomalies = anomalies[anomalies == True]
-            anomalies = data_yf[data_yf.index.isin(anomalies.index)][feature]
-            fig = go.Figure()
-            fig.add_trace(
-                go.Scatter(
-                    x = data_yf.index,
-                    y = data_yf[feature],
-                    mode = "lines",
-                    name = feature
+            try:
+                seasonal_ad = SeasonalAD()
+                anomalies = seasonal_ad.fit_detect(ad_data)
+                anomalies = anomalies[anomalies == True]
+                anomalies = data_yf[data_yf.index.isin(anomalies.index)][feature]
+                fig = go.Figure()
+                fig.add_trace(
+                    go.Scatter(
+                        x = data_yf.index,
+                        y = data_yf[feature],
+                        mode = "lines",
+                        name = feature
+                    )
                 )
-            )
-            fig.add_trace(
-                go.Scatter(
-                    x = anomalies.index,
-                    y = anomalies,
-                    mode = "markers",
-                    marker = {
-                        "color": "red"
-                    },
-                    name = "Anomalies"
+                fig.add_trace(
+                    go.Scatter(
+                        x = anomalies.index,
+                        y = anomalies,
+                        mode = "markers",
+                        marker = {
+                            "color": "red"
+                        },
+                        name = "Anomalies"
+                    )
                 )
-            )
-            st.plotly_chart(
-                fig,
-                use_container_width = True
-            )
+                st.plotly_chart(
+                    fig,
+                    use_container_width = True
+                )
+            except:
+                st.error("No seasonality pattern found. Choose another model.")
         elif ad_model == "Threshold":
             grid2 = grid(2, vertical_align = True)
             low_threshold = grid2.slider(
