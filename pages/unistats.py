@@ -1263,7 +1263,7 @@ with main_tabs[3]:
                     use_container_width = True
                 )
             except:
-                st.error("No seasonality pattern found. Choose another model.")
+                st.error("No seasonality pattern found. Choose another Anomaly Detection model.")
         elif ad_model == "Threshold":
             grid2 = grid(2, vertical_align = True)
             low_threshold = grid2.slider(
