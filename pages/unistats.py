@@ -31,7 +31,8 @@ from adtk.detector import (
     ThresholdAD,
     QuantileAD,
     InterQuartileRangeAD,
-    GeneralizedESDTestAD
+    GeneralizedESDTestAD,
+    PersistAD
     )
 #STREAMLIT THIRD-PARTY
 from streamlit_extras.grid import grid
@@ -336,72 +337,75 @@ with main_tabs[1]: #INDICATORS TAB
                 step = 0.25,
                 key = "sigmas"
             )
-            aggs = data_yf["Return"]\
-                .rolling(window = ma_window)\
-                .agg(["mean", "std"])
-            data_yf = data_yf.join(aggs)
-            data_yf["upper"] = data_yf["mean"] + N_SIGMAS * data_yf["std"]
-            data_yf["lower"] = data_yf["mean"] - N_SIGMAS * data_yf["std"]
-            data_yf["outlier"] = (
-                (data_yf["Return"] > data_yf["upper"]) | (data_yf["Return"] < data_yf["lower"])
-            )
-            fig = go.Figure()
-            #BOUNDARIES - UPPER
-            fig.add_trace(
-                go.Scatter(
-                    x = data_yf.index,
-                    y = data_yf["upper"],
-                    mode = "lines",
-                    line = {
-                        "width": 0
-                    },
-                    showlegend = False,
-                    name = "Upper bound"
+            try:
+                aggs = data_yf["Return"]\
+                    .rolling(window = ma_window)\
+                    .agg(["mean", "std"])
+                data_yf = data_yf.join(aggs)
+                data_yf["upper"] = data_yf["mean"] + N_SIGMAS * data_yf["std"]
+                data_yf["lower"] = data_yf["mean"] - N_SIGMAS * data_yf["std"]
+                data_yf["outlier"] = (
+                    (data_yf["Return"] > data_yf["upper"]) | (data_yf["Return"] < data_yf["lower"])
                 )
-            )
-            #BOUNDARIES - LOWER
-            fig.add_trace(
-                go.Scatter(
-                    x = data_yf.index,
-                    y = data_yf["lower"],
-                    mode = "lines",
-                    line = {
-                        "width": 0
-                    },
-                    fillcolor = "rgba(0,0,255,0.3)",
-                    fill = "tonexty",
-                    showlegend = False,
-                    name = "Lower bound"
+                fig = go.Figure()
+                #BOUNDARIES - UPPER
+                fig.add_trace(
+                    go.Scatter(
+                        x = data_yf.index,
+                        y = data_yf["upper"],
+                        mode = "lines",
+                        line = {
+                            "width": 0
+                        },
+                        showlegend = False,
+                        name = "Upper bound"
+                    )
                 )
-            )
-            #RETURNS
-            fig.add_trace(
-                go.Scatter(
-                    x = data_yf.index,
-                    y = data_yf["Return"],
-                    mode = "lines",
-                    name = "Returns"
+                #BOUNDARIES - LOWER
+                fig.add_trace(
+                    go.Scatter(
+                        x = data_yf.index,
+                        y = data_yf["lower"],
+                        mode = "lines",
+                        line = {
+                            "width": 0
+                        },
+                        fillcolor = "rgba(0,0,255,0.3)",
+                        fill = "tonexty",
+                        showlegend = False,
+                        name = "Lower bound"
+                    )
                 )
-            )
-            #OUTLIERS
-            outliers_data = data_yf[
-                data_yf["outlier"] == True
-            ]
-            fig.add_trace(
-                go.Scatter(
-                    x = outliers_data.index,
-                    y = outliers_data["Return"],
-                    mode = "markers",
-                    marker = {
-                        "size": 10
-                    },
-                    name = "Outlier"
+                #RETURNS
+                fig.add_trace(
+                    go.Scatter(
+                        x = data_yf.index,
+                        y = data_yf["Return"],
+                        mode = "lines",
+                        name = "Returns"
+                    )
                 )
-            )
-            st.plotly_chart(
-                fig,
-                use_container_width = True
-            )
+                #OUTLIERS
+                outliers_data = data_yf[
+                    data_yf["outlier"] == True
+                ]
+                fig.add_trace(
+                    go.Scatter(
+                        x = outliers_data.index,
+                        y = outliers_data["Return"],
+                        mode = "markers",
+                        marker = {
+                            "size": 10
+                        },
+                        name = "Outlier"
+                    )
+                )
+                st.plotly_chart(
+                    fig,
+                    use_container_width = True
+                )
+            except:
+                st.error("Not enough data to process. Choose another financial asset.")
         with subtabs[1]:
             st.write("$$\\underline{\\huge{\\textbf{Outliers - Hampel Filter}}}$$")
             ma_grid = grid(2, vertical_align = True)
@@ -431,39 +435,42 @@ with main_tabs[1]: #INDICATORS TAB
                 step = 1,
                 key = "ma_window_3"
             )
-            hampel_detector = HampelFilter(
-                window_length = ma_window,
-                return_bool = True
-            )
-            outlier_hampel = hampel_detector.fit_transform(data_yf[ma_feature])
-            fig = go.Figure()
-            fig.add_trace(
-                go.Scatter(
-                    x = data_yf.index,
-                    y = data_yf[ma_feature],
-                    mode = "lines",
-                    name = ma_feature
+            try:
+                hampel_detector = HampelFilter(
+                    window_length = ma_window,
+                    return_bool = True
                 )
-            )
-            outliers_data = data_yf[
-                outlier_hampel == True
-            ]
-            fig.add_trace(
-                go.Scatter(
-                    x = outliers_data.index,
-                    y = outliers_data[ma_feature],
-                    mode = "markers",
-                    name = "Outlier",
-                    marker = {
-                        "color": "red",
-                        "size": 10
-                    }
+                outlier_hampel = hampel_detector.fit_transform(data_yf[ma_feature])
+                fig = go.Figure()
+                fig.add_trace(
+                    go.Scatter(
+                        x = data_yf.index,
+                        y = data_yf[ma_feature],
+                        mode = "lines",
+                        name = ma_feature
+                    )
                 )
-            )
-            st.plotly_chart(
-                fig,
-                use_container_width = True
-            )
+                outliers_data = data_yf[
+                    outlier_hampel == True
+                ]
+                fig.add_trace(
+                    go.Scatter(
+                        x = outliers_data.index,
+                        y = outliers_data[ma_feature],
+                        mode = "markers",
+                        name = "Outlier",
+                        marker = {
+                            "color": "red",
+                            "size": 10
+                        }
+                    )
+                )
+                st.plotly_chart(
+                    fig,
+                    use_container_width = True
+                )
+            except:
+                st.error("Not enough data to process. Choose another financial asset.")
         with subtabs[2]:
             st.write("$$\\underline{\\huge{\\textbf{Outliers - Changepoints}}}$$")
             ma_grid = grid(3, vertical_align = True)
@@ -499,39 +506,42 @@ with main_tabs[1]: #INDICATORS TAB
                 min_value = 1,
                 step = 1,
                 key = "bkp")
-            if ma_model == "Dynamic Programming":
-                try:
-                    algo = rpt.Dynp(model = "l2", min_size = 30)
-                    algo.fit(data_yf[ma_feature].values.reshape(-1, 1))
-                    result = algo.predict(n_bkps = breakpoints)
-                    st.pyplot(rpt.display(
-                        data_yf[ma_feature].values.reshape(-1, 1),
-                        [],
-                        result)[0])
-                except rpt.exceptions.BadSegmentationParameters:
-                    st.error("Increase the period to get results.")
-            elif ma_model == "Binary Segmentation":
-                try:
-                    algo = rpt.Binseg(model = "l2", min_size = 30)
-                    algo.fit(data_yf[ma_feature].values.reshape(-1, 1))
-                    result = algo.predict(n_bkps = breakpoints)
-                    st.pyplot(rpt.display(
-                        data_yf[ma_feature].values.reshape(-1, 1),
-                        [],
-                        result)[0])
-                except rpt.exceptions.BadSegmentationParameters:
-                    st.error("Increase the period to get results.")
-            elif ma_model == "Window":
-                try:
-                    algo = rpt.Window(model = "l2", min_size = 30)
-                    algo.fit(data_yf[ma_feature].values.reshape(-1, 1))
-                    result = algo.predict(n_bkps = breakpoints)
-                    st.pyplot(rpt.display(
-                        data_yf[ma_feature].values.reshape(-1, 1),
-                        [],
-                        result)[0])
-                except rpt.exceptions.BadSegmentationParameters:
-                    st.error("Increase the period to get results.")
+            try:
+                if ma_model == "Dynamic Programming":
+                    try:
+                        algo = rpt.Dynp(model = "l2", min_size = 30)
+                        algo.fit(data_yf[ma_feature].values.reshape(-1, 1))
+                        result = algo.predict(n_bkps = breakpoints)
+                        st.pyplot(rpt.display(
+                            data_yf[ma_feature].values.reshape(-1, 1),
+                            [],
+                            result)[0])
+                    except rpt.exceptions.BadSegmentationParameters:
+                        st.error("Increase the period to get results.")
+                elif ma_model == "Binary Segmentation":
+                    try:
+                        algo = rpt.Binseg(model = "l2", min_size = 30)
+                        algo.fit(data_yf[ma_feature].values.reshape(-1, 1))
+                        result = algo.predict(n_bkps = breakpoints)
+                        st.pyplot(rpt.display(
+                            data_yf[ma_feature].values.reshape(-1, 1),
+                            [],
+                            result)[0])
+                    except rpt.exceptions.BadSegmentationParameters:
+                        st.error("Increase the period to get results.")
+                elif ma_model == "Window":
+                    try:
+                        algo = rpt.Window(model = "l2", min_size = 30)
+                        algo.fit(data_yf[ma_feature].values.reshape(-1, 1))
+                        result = algo.predict(n_bkps = breakpoints)
+                        st.pyplot(rpt.display(
+                            data_yf[ma_feature].values.reshape(-1, 1),
+                            [],
+                            result)[0])
+                    except rpt.exceptions.BadSegmentationParameters:
+                        st.error("Increase the period to get results.")
+            except:
+                st.error("Not enough data to process. Choose another financial asset.")
     with tabs[1]:
         st.write("$$\\underline{\\huge{\\textbf{RSI - Relative Strength Index}}}$$")
         RSI = ta.rsi(data_yf["Close"])
@@ -541,7 +551,7 @@ with main_tabs[1]: #INDICATORS TAB
                 x = data_yf.index,
                 y = RSI,
                 mode = "lines",
-                name = "RSI"
+                name = "RSI (Close)"
             )
         )
         fig.add_trace(
@@ -571,108 +581,111 @@ with main_tabs[1]: #INDICATORS TAB
             use_container_width = True)
     with tabs[2]:
         st.write("$$\\underline{\\huge{\\textbf{MACD - Moving Average Convergence/Divergence}}}$$")
-        data_yf.ta.macd(
-            close = "Close",
-            fast = 12,
-            slow = 26,
-            signal = 9,
-            append = True)
-        fig = make_subplots(
-            rows = 2,
-            cols = 1
-        )
-        #Price Line
-        fig.append_trace(
-            go.Scatter(
-                x = data_yf.index,
-                y = data_yf["Open"],
-                line = {
-                    "color": "#000000",
-                    "width": 1
-                },
-                name = "Open",
-                legendgroup = 1
-            ),
-            row = 1,
-            col = 1
-        )
-        #Candlestick chart
-        fig.append_trace(
-            go.Candlestick(
-                x = data_yf.index,
-                open = data_yf['Open'],
-                high = data_yf['High'],
-                low = data_yf['Low'],
-                close = data_yf['Close'],
-                increasing_line_color = '#00FF00',
-                decreasing_line_color = '#FF0000',
-                showlegend=False
-            ), 
-            row = 1, 
-            col = 1
-        )
-        # Fast Signal (%k)
-        fig.append_trace(
-            go.Scatter(
-                x = data_yf.index,
-                y = data_yf['MACD_12_26_9'],
-                line = dict(
-                    color = '#0000FF', 
-                    width = 2),
-                name = 'MACD',
-                # showlegend=False,
-                legendgroup = '2',
-            ), 
-            row = 2, 
-            col = 1
-        )
-        # Slow signal (%d)
-        fig.append_trace(
-            go.Scatter(
-                x = data_yf.index,
-                y = data_yf['MACDs_12_26_9'],
-                line = dict(
-                    color = '#000000', 
-                    width = 2),
-                # showlegend=False,
-                legendgroup = '2',
-                name = 'signal'
-            ), 
-            row = 2, 
-            col = 1
-        )
-        # Colorize the histogram values
-        colors = np.where(data_yf['MACDh_12_26_9'] < 0, '#FF0000', '#00FF00')
-        # Plot the histogram
-        fig.append_trace(
-            go.Bar(
-                x = data_yf.index,
-                y = data_yf['MACDh_12_26_9'],
-                name = 'histogram',
-                marker_color = colors,
-            ), 
-            row = 2, 
-            col = 1
-        )
-        # Make it pretty
-        layout = go.Layout(
-            plot_bgcolor =' #EFEFEF',
-            height = 800,
-            # Font Families
-            font_family = 'Monospace',
-            font_color = '#000000',
-            font_size = 20,
-            xaxis = dict(
-                rangeslider = dict(
-                    visible = False
+        try:
+            data_yf.ta.macd(
+                close = "Close",
+                fast = 12,
+                slow = 26,
+                signal = 9,
+                append = True)
+            fig = make_subplots(
+                rows = 2,
+                cols = 1
+            )
+            #Price Line
+            fig.append_trace(
+                go.Scatter(
+                    x = data_yf.index,
+                    y = data_yf["Open"],
+                    line = {
+                        "color": "#000000",
+                        "width": 1
+                    },
+                    name = "Open",
+                    legendgroup = 1
+                ),
+                row = 1,
+                col = 1
+            )
+            #Candlestick chart
+            fig.append_trace(
+                go.Candlestick(
+                    x = data_yf.index,
+                    open = data_yf['Open'],
+                    high = data_yf['High'],
+                    low = data_yf['Low'],
+                    close = data_yf['Close'],
+                    increasing_line_color = '#00FF00',
+                    decreasing_line_color = '#FF0000',
+                    showlegend=False
+                ), 
+                row = 1, 
+                col = 1
+            )
+            # Fast Signal (%k)
+            fig.append_trace(
+                go.Scatter(
+                    x = data_yf.index,
+                    y = data_yf['MACD_12_26_9'],
+                    line = dict(
+                        color = '#0000FF', 
+                        width = 2),
+                    name = 'MACD',
+                    # showlegend=False,
+                    legendgroup = '2',
+                ), 
+                row = 2, 
+                col = 1
+            )
+            # Slow signal (%d)
+            fig.append_trace(
+                go.Scatter(
+                    x = data_yf.index,
+                    y = data_yf['MACDs_12_26_9'],
+                    line = dict(
+                        color = '#000000', 
+                        width = 2),
+                    # showlegend=False,
+                    legendgroup = '2',
+                    name = 'signal'
+                ), 
+                row = 2, 
+                col = 1
+            )
+            # Colorize the histogram values
+            colors = np.where(data_yf['MACDh_12_26_9'] < 0, '#FF0000', '#00FF00')
+            # Plot the histogram
+            fig.append_trace(
+                go.Bar(
+                    x = data_yf.index,
+                    y = data_yf['MACDh_12_26_9'],
+                    name = 'histogram',
+                    marker_color = colors,
+                ), 
+                row = 2, 
+                col = 1
+            )
+            # Make it pretty
+            layout = go.Layout(
+                plot_bgcolor =' #EFEFEF',
+                height = 800,
+                # Font Families
+                font_family = 'Monospace',
+                font_color = '#000000',
+                font_size = 20,
+                xaxis = dict(
+                    rangeslider = dict(
+                        visible = False
+                    )
                 )
             )
-        )
-        # Update options and show plot
-        fig.update_layout(layout)
-        st.plotly_chart(
-            fig,
-            use_container_width = True)
+            # Update options and show plot
+            fig.update_layout(layout)
+            st.plotly_chart(
+                fig,
+                use_container_width = True)
+        except:
+            st.error("Not enough data to process. Choose another financial asset.")
 with main_tabs[2]: #FORECAST TAB
     tabs = st.tabs([
         "$$\\textbf{Seasonality}$$",
@@ -736,29 +749,32 @@ with main_tabs[2]: #FORECAST TAB
             fig,
             use_container_width = True
         )
-        if model_filter == "Seasonal Decompose":
-            try:
-                decomposition_results = seasonal_decompose(
-                    data_yf[feature],
-                    model = ts_type,
-                    period = 21 #21 business days
-                )
-                st.pyplot(
-                    decomposition_results.plot()
-                )
-            except:
-                st.error("Increase the period of the data.")
-        elif model_filter == "STL":
-            try:
-                stl_decomposition = STL(
-                    data_yf[feature],
-                    period = 21
-                ).fit()
-                st.pyplot(
-                    stl_decomposition.plot()
-                )
-            except: 
-                st.error("Increase the period of the data.")
+        try:
+            if model_filter == "Seasonal Decompose":
+                try:
+                    decomposition_results = seasonal_decompose(
+                        data_yf[feature],
+                        model = ts_type,
+                        period = 21 #21 business days
+                    )
+                    st.pyplot(
+                        decomposition_results.plot()
+                    )
+                except:
+                    st.error("Increase the period of the data.")
+            elif model_filter == "STL":
+                try:
+                    stl_decomposition = STL(
+                        data_yf[feature],
+                        period = 21
+                    ).fit()
+                    st.pyplot(
+                        stl_decomposition.plot()
+                    )
+                except: 
+                    st.error("Increase the period of the data.")
+        except:
+            st.error("Not enough data to process. Choose another financial asset.")
     with tabs[1]:
         st.write("$$\\underline{\\huge{\\textbf{Stationarity}}}$$")
         feature = st.selectbox(
@@ -774,39 +790,42 @@ with main_tabs[2]: #FORECAST TAB
             index = 4,
             key = "feature2"
         )
-        cols = st.columns(2)
-        with cols[0]:
-            st.write("$$\\huge{\\textbf{ADF Test}}$$")
-            indices = [
-                "Test Statistic",
-                "p-value",
-                "# of Lags Used",
-                "# of Observations Used"
-            ]
-            adf_test = adfuller(data_yf[feature], autolag = "AIC")
-            results = pd.Series(adf_test[0:4], index = indices)
-            for key, value in adf_test[4].items():
-                results[f"Critical Value ({key})"] = value
-            st.text(results)
-        with cols[1]:
-            st.write("$$\\huge{\\textbf{KPSS Test}}$$")
-            indices = [
-                "Test Statistic",
-                "p-value",
-                "# of Lags"
-            ]
-            kpss_test = kpss(data_yf[feature], regression = "c")
-            results = pd.Series(kpss_test[0:3], index = indices)
-            for key, value in kpss_test[3].items():
-                results[f"Critical Value ({key})"] = value
-            st.text(results)
-        cols2 = st.columns(2)
-        N_LAGS = 30
-        SIGNIFICANCE_LEVEL = 0.05
-        with cols2[0]:
-            st.pyplot(plot_acf(data_yf[feature], lags = N_LAGS, alpha = SIGNIFICANCE_LEVEL))
-        with cols2[1]:
-            st.pyplot(plot_pacf(data_yf[feature], lags = N_LAGS, alpha = SIGNIFICANCE_LEVEL))
+        try:
+            cols = st.columns(2)
+            with cols[0]:
+                st.write("$$\\huge{\\textbf{ADF Test}}$$")
+                indices = [
+                    "Test Statistic",
+                    "p-value",
+                    "# of Lags Used",
+                    "# of Observations Used"
+                ]
+                adf_test = adfuller(data_yf[feature], autolag = "AIC")
+                results = pd.Series(adf_test[0:4], index = indices)
+                for key, value in adf_test[4].items():
+                    results[f"Critical Value ({key})"] = value
+                st.text(results)
+            with cols[1]:
+                st.write("$$\\huge{\\textbf{KPSS Test}}$$")
+                indices = [
+                    "Test Statistic",
+                    "p-value",
+                    "# of Lags"
+                ]
+                kpss_test = kpss(data_yf[feature], regression = "c")
+                results = pd.Series(kpss_test[0:3], index = indices)
+                for key, value in kpss_test[3].items():
+                    results[f"Critical Value ({key})"] = value
+                st.text(results)
+            cols2 = st.columns(2)
+            N_LAGS = 30
+            SIGNIFICANCE_LEVEL = 0.05
+            with cols2[0]:
+                st.pyplot(plot_acf(data_yf[feature], lags = N_LAGS, alpha = SIGNIFICANCE_LEVEL))
+            with cols2[1]:
+                st.pyplot(plot_pacf(data_yf[feature], lags = N_LAGS, alpha = SIGNIFICANCE_LEVEL))
+        except:
+            st.error("Not enough data to process. Choose another financial asset.")
     with tabs[2]:
         st.write("$$\\underline{\\huge{\\textbf{Exponential Smoothing}}}$$")
         TEST_LENGTH = 15
@@ -835,177 +854,180 @@ with main_tabs[2]: #FORECAST TAB
             index = 4,
             key = "feature3"
         )
-        if model_filter == "Simple Exponential Smoothing":
-            ses_1 = SimpleExpSmoothing(data_train[feature]).fit(smoothing_level = 0.5)
-            ses_forecast_1 = ses_1.forecast(TEST_LENGTH)
-            ses_2 = SimpleExpSmoothing(data_train[feature]).fit()
-            ses_forecast_2 = ses_2.forecast(TEST_LENGTH)
-            ses_data = pd.DataFrame()
-            ses_data["ses_1"] = ses_1.fittedvalues.tolist() + ses_forecast_1.tolist()
-            ses_data["ses_2"] = ses_2.fittedvalues.tolist() + ses_forecast_2.tolist()
-            ses_data.index = data_yf2.index
-            opt_alpha = ses_2.model.params["smoothing_level"]
-            fig = go.Figure()
-            fig.add_trace(
-                go.Scatter(
-                    x = data_yf2.index,
-                    y = data_yf2[feature],
-                    mode = "lines",
-                    name = feature
+        try:
+            if model_filter == "Simple Exponential Smoothing":
+                ses_1 = SimpleExpSmoothing(data_train[feature]).fit(smoothing_level = 0.5)
+                ses_forecast_1 = ses_1.forecast(TEST_LENGTH)
+                ses_2 = SimpleExpSmoothing(data_train[feature]).fit()
+                ses_forecast_2 = ses_2.forecast(TEST_LENGTH)
+                ses_data = pd.DataFrame()
+                ses_data["ses_1"] = ses_1.fittedvalues.tolist() + ses_forecast_1.tolist()
+                ses_data["ses_2"] = ses_2.fittedvalues.tolist() + ses_forecast_2.tolist()
+                ses_data.index = data_yf2.index
+                opt_alpha = ses_2.model.params["smoothing_level"]
+                fig = go.Figure()
+                fig.add_trace(
+                    go.Scatter(
+                        x = data_yf2.index,
+                        y = data_yf2[feature],
+                        mode = "lines",
+                        name = feature
+                    )
                 )
-            )
-            fig.add_trace(
-                go.Scatter(
-                    x = ses_data.index,
-                    y = ses_data["ses_1"],
-                    mode = "lines",
-                    name = "SES",
-                    line = {
-                            "dash": "dash",
-                            "color": "blue"
-                        }
+                fig.add_trace(
+                    go.Scatter(
+                        x = ses_data.index,
+                        y = ses_data["ses_1"],
+                        mode = "lines",
+                        name = "SES",
+                        line = {
+                                "dash": "dash",
+                                "color": "blue"
+                            }
+                    )
                 )
-            )
-            fig.add_trace(
-                go.Scatter(
-                    x = ses_data.index,
-                    y = ses_data["ses_1"],
-                    mode = "lines",
-                    name = "SES (smoothing level = 0.5)",
-                    line = {
-                            "dash": "dash",
-                            "color": "red"
-                        }
+                fig.add_trace(
+                    go.Scatter(
+                        x = ses_data.index,
+                        y = ses_data["ses_1"],
+                        mode = "lines",
+                        name = "SES (smoothing level = 0.5)",
+                        line = {
+                                "dash": "dash",
+                                "color": "red"
+                            }
+                    )
                 )
-            )
-            st.plotly_chart(
-                fig,
-                use_container_width = True
-            )
-        elif model_filter == "Holt's model":
-            #Holt's model with linear trend
-            hs_1 = Holt(data_train[feature]).fit()
-            hs_forecast_1 = hs_1.forecast(TEST_LENGTH)
-            #Holt's model with exponential trend
-            hs_2 = Holt(data_train[feature], exponential = True).fit()
-            hs_forecast_2 = hs_2.forecast(TEST_LENGTH)
-            #Holt's model with exponential trend and damping
-            hs_3 = Holt(data_train[feature], exponential = False, damped_trend = True).fit()
-            hs_forecast_3 = hs_3.forecast(TEST_LENGTH)
-            holt_data = pd.DataFrame()
-            holt_data["hs_1"] = hs_1.fittedvalues.tolist() + hs_forecast_1.tolist()
-            holt_data["hs_2"] = hs_2.fittedvalues.tolist() + hs_forecast_2.tolist()
-            holt_data["hs_3"] = hs_3.fittedvalues.tolist() + hs_forecast_3.tolist()
-            holt_data.index = data_yf2.index
-            fig = go.Figure()
-            fig.add_trace(
-                go.Scatter(
-                    x = data_yf2.index,
-                    y = data_yf2[feature],
-                    mode = "lines",
-                    name = feature
+                st.plotly_chart(
+                    fig,
+                    use_container_width = True
                 )
-            )
-            fig.add_trace(
-                go.Scatter(
-                    x = holt_data.index,
-                    y = holt_data["hs_1"],
-                    mode = "lines",
-                    name = "Holt's model with linear trend",
-                    line = {
-                            "dash": "dash",
-                            "color": "blue"
-                        }
+            elif model_filter == "Holt's model":
+                #Holt's model with linear trend
+                hs_1 = Holt(data_train[feature]).fit()
+                hs_forecast_1 = hs_1.forecast(TEST_LENGTH)
+                #Holt's model with exponential trend
+                hs_2 = Holt(data_train[feature], exponential = True).fit()
+                hs_forecast_2 = hs_2.forecast(TEST_LENGTH)
+                #Holt's model with exponential trend and damping
+                hs_3 = Holt(data_train[feature], exponential = False, damped_trend = True).fit()
+                hs_forecast_3 = hs_3.forecast(TEST_LENGTH)
+                holt_data = pd.DataFrame()
+                holt_data["hs_1"] = hs_1.fittedvalues.tolist() + hs_forecast_1.tolist()
+                holt_data["hs_2"] = hs_2.fittedvalues.tolist() + hs_forecast_2.tolist()
+                holt_data["hs_3"] = hs_3.fittedvalues.tolist() + hs_forecast_3.tolist()
+                holt_data.index = data_yf2.index
+                fig = go.Figure()
+                fig.add_trace(
+                    go.Scatter(
+                        x = data_yf2.index,
+                        y = data_yf2[feature],
+                        mode = "lines",
+                        name = feature
+                    )
                 )
-            )
-            fig.add_trace(
-                go.Scatter(
-                    x = holt_data.index,
-                    y = holt_data["hs_2"],
-                    mode = "lines",
-                    name = "Holt's model with exponential trend",
-                    line = {
-                            "dash": "dash",
-                            "color": "red"
-                        }
+                fig.add_trace(
+                    go.Scatter(
+                        x = holt_data.index,
+                        y = holt_data["hs_1"],
+                        mode = "lines",
+                        name = "Holt's model with linear trend",
+                        line = {
+                                "dash": "dash",
+                                "color": "blue"
+                            }
+                    )
                 )
-            )
-            fig.add_trace(
-                go.Scatter(
-                    x = holt_data.index,
-                    y = holt_data["hs_2"],
-                    mode = "lines",
-                    name = "Holt's model with exponential trend and damping",
-                    line = {
-                            "dash": "dash",
-                            "color": "green"
-                        }
+                fig.add_trace(
+                    go.Scatter(
+                        x = holt_data.index,
+                        y = holt_data["hs_2"],
+                        mode = "lines",
+                        name = "Holt's model with exponential trend",
+                        line = {
+                                "dash": "dash",
+                                "color": "red"
+                            }
+                    )
                 )
-            )
-            st.plotly_chart(
-                fig,
-                use_container_width = True
-            )
-        elif model_filter == "Holt-Winters' Triple Exponential Smoothing":
-            SEASONAL_PERIODS = 12
-            #Holt-Winters' model with exponential trend
-            hw_1 = ExponentialSmoothing(
-                data_train[feature],
-                trend = "mul",
-                seasonal = "add",
-                seasonal_periods = SEASONAL_PERIODS
-            ).fit()
-            hw_forecast_1 = hw_1.forecast(TEST_LENGTH)
-            #Holt-Winters' model with exponential trend and damping
-            hw_2 = ExponentialSmoothing(
-                data_train[feature],
-                trend = "mul",
-                seasonal = "add",
-                seasonal_periods = SEASONAL_PERIODS,
-                damped_trend = True
-            ).fit()
-            hw_forecast_2 = hw_2.forecast(TEST_LENGTH)
-            hw_data = pd.DataFrame()
-            hw_data["hw_1"] = hw_1.fittedvalues.tolist() + hw_forecast_1.tolist()
-            hw_data["hw_2"] = hw_2.fittedvalues.tolist() + hw_forecast_2.tolist()
-            hw_data.index = data_yf2.index
-            fig = go.Figure()
-            fig.add_trace(
-                go.Scatter(
-                    x = data_yf2.index,
-                    y = data_yf2[feature],
-                    mode = "lines",
-                    name = feature
+                fig.add_trace(
+                    go.Scatter(
+                        x = holt_data.index,
+                        y = holt_data["hs_2"],
+                        mode = "lines",
+                        name = "Holt's model with exponential trend and damping",
+                        line = {
+                                "dash": "dash",
+                                "color": "green"
+                            }
+                    )
                 )
-            )
-            fig.add_trace(
-                go.Scatter(
-                    x = hw_data.index,
-                    y = hw_data["hw_1"],
-                    mode = "lines",
-                    name = "Holt-Winters' model with exponential trend",
-                    line = {
-                            "dash": "dash",
-                            "color": "blue"
-                        }
+                st.plotly_chart(
+                    fig,
+                    use_container_width = True
                 )
-            )
-            fig.add_trace(
-                go.Scatter(
-                    x = hw_data.index,
-                    y = hw_data["hw_2"],
-                    mode = "lines",
-                    name = "Holt-Winters' model with exponential trend and damping",
-                    line = {
-                            "dash": "dash",
-                            "color": "red"
-                        }
+            elif model_filter == "Holt-Winters' Triple Exponential Smoothing":
+                SEASONAL_PERIODS = 12
+                #Holt-Winters' model with exponential trend
+                hw_1 = ExponentialSmoothing(
+                    data_train[feature],
+                    trend = "mul",
+                    seasonal = "add",
+                    seasonal_periods = SEASONAL_PERIODS
+                ).fit()
+                hw_forecast_1 = hw_1.forecast(TEST_LENGTH)
+                #Holt-Winters' model with exponential trend and damping
+                hw_2 = ExponentialSmoothing(
+                    data_train[feature],
+                    trend = "mul",
+                    seasonal = "add",
+                    seasonal_periods = SEASONAL_PERIODS,
+                    damped_trend = True
+                ).fit()
+                hw_forecast_2 = hw_2.forecast(TEST_LENGTH)
+                hw_data = pd.DataFrame()
+                hw_data["hw_1"] = hw_1.fittedvalues.tolist() + hw_forecast_1.tolist()
+                hw_data["hw_2"] = hw_2.fittedvalues.tolist() + hw_forecast_2.tolist()
+                hw_data.index = data_yf2.index
+                fig = go.Figure()
+                fig.add_trace(
+                    go.Scatter(
+                        x = data_yf2.index,
+                        y = data_yf2[feature],
+                        mode = "lines",
+                        name = feature
+                    )
                 )
-            )
-            st.plotly_chart(
-                fig,
-                use_container_width = True
-            )
+                fig.add_trace(
+                    go.Scatter(
+                        x = hw_data.index,
+                        y = hw_data["hw_1"],
+                        mode = "lines",
+                        name = "Holt-Winters' model with exponential trend",
+                        line = {
+                                "dash": "dash",
+                                "color": "blue"
+                            }
+                    )
+                )
+                fig.add_trace(
+                    go.Scatter(
+                        x = hw_data.index,
+                        y = hw_data["hw_2"],
+                        mode = "lines",
+                        name = "Holt-Winters' model with exponential trend and damping",
+                        line = {
+                                "dash": "dash",
+                                "color": "red"
+                            }
+                    )
+                )
+                st.plotly_chart(
+                    fig,
+                    use_container_width = True
+                )
+        except:
+            st.error("Not enough data to process. Choose another financial asset.")
     with tabs[3]:
         st.write("$$\\underline{\\huge{\\textbf{ARIMA}}}$$")
         grid1 = grid(1, vertical_align = True)
@@ -1022,159 +1044,162 @@ with main_tabs[2]: #FORECAST TAB
             index = 4,
             key = "feature4"
         )
-        with st.expander(
-            label = "Stationary feature"
-        ):
-            grid2 = grid([4, 1], vertical_align = True)
-            container = grid2.container()
-            #transforming time series to stationarity
-            data_train[f"{feature} log"] = np.log(data_train[feature])
-            data_train[f"{feature} diff"] = data_train[f"{feature} log"].diff()
-            fig = make_subplots(
-                rows = 3, 
-                cols = 1,
-                subplot_titles = (
-                    feature,
-                    f"{feature} log",
-                    f"{feature} diff"
-                ))
-            fig.append_trace(
+        try:
+            with st.expander(
+                label = "Stationary feature"
+            ):
+                grid2 = grid([4, 1], vertical_align = True)
+                container = grid2.container()
+                #transforming time series to stationarity
+                data_train[f"{feature} log"] = np.log(data_train[feature])
+                data_train[f"{feature} diff"] = data_train[f"{feature} log"].diff()
+                fig = make_subplots(
+                    rows = 3, 
+                    cols = 1,
+                    subplot_titles = (
+                        feature,
+                        f"{feature} log",
+                        f"{feature} diff"
+                    ))
+                fig.append_trace(
+                    go.Scatter(
+                        x = data_train.index,
+                        y = data_train[feature],
+                        mode = "lines",
+                        name = feature
+                    ),
+                    row = 1,
+                    col = 1
+                )
+                fig.append_trace(
+                    go.Scatter(
+                        x = data_train.index,
+                        y = data_train[f"{feature} log"],
+                        mode = "lines",
+                        name = f"{feature} log"
+                    ),
+                    row = 2,
+                    col = 1
+                )
+                fig.append_trace(
+                    go.Scatter(
+                        x = data_train.index,
+                        y = data_train[f"{feature} diff"],
+                        mode = "lines",
+                        name = f"{feature} diff"
+                    ),
+                    row = 3,
+                    col = 1
+                )
+                fig.update_layout(
+                    height = 800
+                )
+                container.plotly_chart(
+                    fig,
+                    use_container_width = True
+                )
+                container2 = grid2.container()
+                container2.text("Feature: " + f"{feature} diff")
+                container2.write("$$\\huge{\\textbf{ADF Test}}$$")
+                indices = [
+                    "Test Statistic",
+                    "p-value",
+                    "# of Lags Used",
+                    "# of Observations Used"
+                ]
+                adf_test = adfuller(data_train[f"{feature} diff"].dropna(), autolag = "AIC")
+                results = pd.Series(adf_test[0:4], index = indices)
+                for key, value in adf_test[4].items():
+                    results[f"Critical Value ({key})"] = value
+                container2.text(results)
+                container2.write("$$\\huge{\\textbf{KPSS Test}}$$")
+                indices = [
+                    "Test Statistic",
+                    "p-value",
+                    "# of Lags"
+                ]
+                kpss_test = kpss(data_train[f"{feature} diff"].dropna(), regression = "c")
+                results = pd.Series(kpss_test[0:3], index = indices)
+                for key, value in kpss_test[3].items():
+                    results[f"Critical Value ({key})"] = value
+                container2.text(results)
+            #ARIMA MODELS TRAINING
+            arima_111 = ARIMA(
+                data_train[f"{feature} log"],
+                order = (1, 1, 1)
+            ).fit()
+            arima_212 = ARIMA(
+                data_train[f"{feature} log"],
+                order = (2, 1, 2)
+            ).fit()
+            #DATA FOR PLOTTING
+            arima_data = pd.DataFrame()
+            arima_data["pred_111_log"] = arima_111.fittedvalues.tolist() + arima_111.forecast(TEST_LENGTH).tolist()
+            arima_data["pred_111"] = np.exp(arima_data["pred_111_log"])
+            arima_data["pred_212_log"] = arima_212.fittedvalues.tolist() + arima_212.forecast(TEST_LENGTH).tolist()
+            arima_data["pred_212"] = np.exp(arima_data["pred_212_log"])
+            arima_data.index = data_yf2.index
+            with st.expander(
+                label = "ARIMA - Summary"
+            ):
+                cols = st.columns(2)
+                with cols[0]:
+                    st.write("#### **ARIMA(1,1,1)**")
+                    st.text(arima_111.summary())
+                with cols[1]:
+                    st.write("#### **ARIMA(2,1,2)**")
+                    st.text(arima_212.summary())
+            fig = go.Figure()
+            fig.add_trace(
                 go.Scatter(
-                    x = data_train.index,
-                    y = data_train[feature],
+                    x = data_yf2.index,
+                    y = data_yf2[feature],
                     mode = "lines",
                     name = feature
-                ),
-                row = 1,
-                col = 1
+                )
             )
-            fig.append_trace(
+            fig.add_trace(
                 go.Scatter(
-                    x = data_train.index,
-                    y = data_train[f"{feature} log"],
+                    x = arima_data.index,
+                    y = arima_data["pred_111"],
                     mode = "lines",
-                    name = f"{feature} log"
-                ),
-                row = 2,
-                col = 1
+                    name = "ARIMA(1,1,1)"
+                )
             )
-            fig.append_trace(
+            fig.add_trace(
                 go.Scatter(
-                    x = data_train.index,
-                    y = data_train[f"{feature} diff"],
+                    x = arima_data.index,
+                    y = arima_data["pred_212"],
                     mode = "lines",
-                    name = f"{feature} diff"
-                ),
-                row = 3,
-                col = 1
+                    name = "ARIMA(2,1,2)"
+                )
             )
-            fig.update_layout(
-                height = 800
-            )
-            container.plotly_chart(
+            grid3 = grid([4, 1], vertical_align = True)
+            container4 = grid3.container()
+            container4.plotly_chart(
                 fig,
                 use_container_width = True
             )
-            container2 = grid2.container()
-            container2.text("Feature: " + f"{feature} diff")
-            container2.write("$$\\huge{\\textbf{ADF Test}}$$")
-            indices = [
-                "Test Statistic",
-                "p-value",
-                "# of Lags Used",
-                "# of Observations Used"
-            ]
-            adf_test = adfuller(data_train[f"{feature} diff"].dropna(), autolag = "AIC")
-            results = pd.Series(adf_test[0:4], index = indices)
-            for key, value in adf_test[4].items():
-                results[f"Critical Value ({key})"] = value
-            container2.text(results)
-            container2.write("$$\\huge{\\textbf{KPSS Test}}$$")
-            indices = [
-                "Test Statistic",
-                "p-value",
-                "# of Lags"
-            ]
-            kpss_test = kpss(data_train[f"{feature} diff"].dropna(), regression = "c")
-            results = pd.Series(kpss_test[0:3], index = indices)
-            for key, value in kpss_test[3].items():
-                results[f"Critical Value ({key})"] = value
-            container2.text(results)
-        #ARIMA MODELS TRAINING
-        arima_111 = ARIMA(
-            data_train[f"{feature} log"],
-            order = (1, 1, 1)
-        ).fit()
-        arima_212 = ARIMA(
-            data_train[f"{feature} log"],
-            order = (2, 1, 2)
-        ).fit()
-        #DATA FOR PLOTTING
-        arima_data = pd.DataFrame()
-        arima_data["pred_111_log"] = arima_111.fittedvalues.tolist() + arima_111.forecast(TEST_LENGTH).tolist()
-        arima_data["pred_111"] = np.exp(arima_data["pred_111_log"])
-        arima_data["pred_212_log"] = arima_212.fittedvalues.tolist() + arima_212.forecast(TEST_LENGTH).tolist()
-        arima_data["pred_212"] = np.exp(arima_data["pred_212_log"])
-        arima_data.index = data_yf2.index
-        with st.expander(
-            label = "ARIMA - Summary"
-        ):
-            cols = st.columns(2)
-            with cols[0]:
-                st.write("#### **ARIMA(1,1,1)**")
-                st.text(arima_111.summary())
-            with cols[1]:
-                st.write("#### **ARIMA(2,1,2)**")
-                st.text(arima_212.summary())
-        fig = go.Figure()
-        fig.add_trace(
-            go.Scatter(
-                x = data_yf2.index,
-                y = data_yf2[feature],
-                mode = "lines",
-                name = feature
+            container5 = grid3.container()
+            mape_111 = mean_absolute_percentage_error(
+                data_yf[feature].iloc[-TEST_LENGTH:],
+                arima_data["pred_111"].iloc[-TEST_LENGTH:]
             )
-        )
-        fig.add_trace(
-            go.Scatter(
-                x = arima_data.index,
-                y = arima_data["pred_111"],
-                mode = "lines",
-                name = "ARIMA(1,1,1)"
+            mape_212 = mean_absolute_percentage_error(
+                data_yf[feature].iloc[-TEST_LENGTH:],
+                arima_data["pred_212"].iloc[-TEST_LENGTH:]
             )
-        )
-        fig.add_trace(
-            go.Scatter(
-                x = arima_data.index,
-                y = arima_data["pred_212"],
-                mode = "lines",
-                name = "ARIMA(2,1,2)"
+            container5.write("### **Mean Absolute Percentage Error (MAPE)**")
+            container5.metric(
+                label = "MAPE of ARIMA(1,1,1)",
+                value = f"{100 * mape_111:.2f}%"
             )
-        )
-        grid3 = grid([4, 1], vertical_align = True)
-        container4 = grid3.container()
-        container4.plotly_chart(
-            fig,
-            use_container_width = True
-        )
-        container5 = grid3.container()
-        mape_111 = mean_absolute_percentage_error(
-            data_yf[feature].iloc[-TEST_LENGTH:],
-            arima_data["pred_111"].iloc[-TEST_LENGTH:]
-        )
-        mape_212 = mean_absolute_percentage_error(
-            data_yf[feature].iloc[-TEST_LENGTH:],
-            arima_data["pred_212"].iloc[-TEST_LENGTH:]
-        )
-        container5.write("### **Mean Absolute Percentage Error (MAPE)**")
-        container5.metric(
-            label = "MAPE of ARIMA(1,1,1)",
-            value = f"{100 * mape_111:.2f}%"
-        )
-        container5.metric(
-            label = "MAPE of ARIMA(2,1,2)",
-            value = f"{100 * mape_212:.2f}%"
-        )
+            container5.metric(
+                label = "MAPE of ARIMA(2,1,2)",
+                value = f"{100 * mape_212:.2f}%"
+            )
+        except:
+            st.error("Not enough data to process. Choose another financial asset.")
 with main_tabs[3]:
     st.write("$$\\underline{\\huge{\\textbf{ANOMALY DETECTION}}}$$")
     grid1 = grid(2, vertical_align = True)
@@ -1198,208 +1223,253 @@ with main_tabs[3]:
             "Threshold",
             "Quantile",
             "Inter Quartile Range",
-            "Generalized Extreme Studentized Deviate (ESD)"
+            "Generalized Extreme Studentized Deviate (ESD)",
+            "Persist"
             ]
     )
-    idx = pd.date_range(data_yf.index[0], data_yf.index[-1])
-    data = data_yf[feature].reindex(idx)
-    data = data.fillna(method = "ffill")
-    ad_data = validate_series(data)
-    if ad_model == "Seasonal":
-        seasonal_ad = SeasonalAD()
-        anomalies = seasonal_ad.fit_detect(ad_data)
-        anomalies = anomalies[anomalies == True]
-        anomalies = data_yf[data_yf.index.isin(anomalies.index)][feature]
-        fig = go.Figure()
-        fig.add_trace(
-            go.Scatter(
-                x = data_yf.index,
-                y = data_yf[feature],
-                mode = "lines",
-                name = feature
+    try:
+        idx = pd.date_range(data_yf.index[0], data_yf.index[-1])
+        data = data_yf[feature].reindex(idx)
+        data = data.fillna(method = "ffill")
+        ad_data = validate_series(data)
+        if ad_model == "Seasonal":
+            seasonal_ad = SeasonalAD()
+            anomalies = seasonal_ad.fit_detect(ad_data)
+            anomalies = anomalies[anomalies == True]
+            anomalies = data_yf[data_yf.index.isin(anomalies.index)][feature]
+            fig = go.Figure()
+            fig.add_trace(
+                go.Scatter(
+                    x = data_yf.index,
+                    y = data_yf[feature],
+                    mode = "lines",
+                    name = feature
+                )
             )
-        )
-        fig.add_trace(
-            go.Scatter(
-                x = anomalies.index,
-                y = anomalies,
-                mode = "markers",
-                marker = {
-                    "color": "red"
-                },
-                name = "Anomalies"
+            fig.add_trace(
+                go.Scatter(
+                    x = anomalies.index,
+                    y = anomalies,
+                    mode = "markers",
+                    marker = {
+                        "color": "red"
+                    },
+                    name = "Anomalies"
+                )
             )
-        )
-        st.plotly_chart(
-            fig,
-            use_container_width = True
-        )
-    elif ad_model == "Threshold":
-        grid2 = grid(2, vertical_align = True)
-        st.write(data_yf[feature].min())
-        low_threshold = grid2.slider(
-            label = "Low (Threshold)",
-            min_value = float(data_yf[feature].min()),
-            max_value = float(data_yf[feature].max()),
-            value = data_yf[feature].min() + (data_yf[feature].max() - data_yf[feature].min())*0.25
-        )
-        high_threshold = grid2.slider(
-            label = "High (Threshold)",
-            min_value = float(data_yf[feature].min()),
-            max_value = float(data_yf[feature].max()),
-            value = data_yf[feature].min() + (data_yf[feature].max() - data_yf[feature].min())*0.75
-        )
-        threshold_ad = ThresholdAD(
-            high = high_threshold,
-            low = low_threshold
-        )
-        anomalies = threshold_ad.detect(ad_data)
-        anomalies = anomalies[anomalies == True]
-        anomalies = data_yf[data_yf.index.isin(anomalies.index)][feature]
-        fig = go.Figure()
-        fig.add_trace(
-            go.Scatter(
-                x = data_yf.index,
-                y = data_yf[feature],
-                mode = "lines",
-                name = feature
+            st.plotly_chart(
+                fig,
+                use_container_width = True
             )
-        )
-        fig.add_trace(
-            go.Scatter(
-                x = anomalies.index,
-                y = anomalies,
-                mode = "markers",
-                marker = {
-                    "color": "red"
-                },
-                name = "Anomalies"
+        elif ad_model == "Threshold":
+            grid2 = grid(2, vertical_align = True)
+            low_threshold = grid2.slider(
+                label = "Low (Threshold)",
+                min_value = float(data_yf[feature].min()),
+                max_value = float(data_yf[feature].max()),
+                value = data_yf[feature].min() + (data_yf[feature].max() - data_yf[feature].min())*0.25
             )
-        )
-        st.plotly_chart(
-            fig,
-            use_container_width = True
-        )
-    elif ad_model == "Quantile":
-        grid2 = grid(2, vertical_align = True)
-        low_threshold = grid2.slider(
-            label = "Low (Quantile)",
-            min_value = 0.0,
-            max_value = 1.0,
-            value = 0.01
-        )
-        high_threshold = grid2.slider(
-            label = "High (Quantile)",
-            min_value = 0.0,
-            max_value = 1.0,
-            value = 0.99
-        )
-        quantile_ad = QuantileAD(
-            high = high_threshold,
-            low = low_threshold
-        )
-        anomalies = quantile_ad.fit_detect(ad_data)
-        anomalies = anomalies[anomalies == True]
-        anomalies = data_yf[data_yf.index.isin(anomalies.index)][feature]
-        fig = go.Figure()
-        fig.add_trace(
-            go.Scatter(
-                x = data_yf.index,
-                y = data_yf[feature],
-                mode = "lines",
-                name = feature
+            high_threshold = grid2.slider(
+                label = "High (Threshold)",
+                min_value = float(data_yf[feature].min()),
+                max_value = float(data_yf[feature].max()),
+                value = data_yf[feature].min() + (data_yf[feature].max() - data_yf[feature].min())*0.75
             )
-        )
-        fig.add_trace(
-            go.Scatter(
-                x = anomalies.index,
-                y = anomalies,
-                mode = "markers",
-                marker = {
-                    "color": "red"
-                },
-                name = "Anomalies"
+            threshold_ad = ThresholdAD(
+                high = high_threshold,
+                low = low_threshold
             )
-        )
-        st.plotly_chart(
-            fig,
-            use_container_width = True
-        )
-    elif ad_model == "Inter Quartile Range":
-        grid2 = grid(1, vertical_align = True)
-        IQR = grid2.slider(
-            label = "Inter Quartile Range",
-            min_value = 0.0,
-            max_value = 3.0,
-            value = 0.0
-        )
-        interquartile_ad = InterQuartileRangeAD(
-            c = IQR
-        )
-        anomalies = interquartile_ad.fit_detect(ad_data)
-        anomalies = anomalies[anomalies == True]
-        anomalies = data_yf[data_yf.index.isin(anomalies.index)][feature]
-        fig = go.Figure()
-        fig.add_trace(
-            go.Scatter(
-                x = data_yf.index,
-                y = data_yf[feature],
-                mode = "lines",
-                name = feature
+            anomalies = threshold_ad.detect(ad_data)
+            anomalies = anomalies[anomalies == True]
+            anomalies = data_yf[data_yf.index.isin(anomalies.index)][feature]
+            fig = go.Figure()
+            fig.add_trace(
+                go.Scatter(
+                    x = data_yf.index,
+                    y = data_yf[feature],
+                    mode = "lines",
+                    name = feature
+                )
             )
-        )
-        fig.add_trace(
-            go.Scatter(
-                x = anomalies.index,
-                y = anomalies,
-                mode = "markers",
-                marker = {
-                    "color": "red"
-                },
-                name = "Anomalies"
+            fig.add_trace(
+                go.Scatter(
+                    x = anomalies.index,
+                    y = anomalies,
+                    mode = "markers",
+                    marker = {
+                        "color": "red"
+                    },
+                    name = "Anomalies"
+                )
             )
-        )
-        st.plotly_chart(
-            fig,
-            use_container_width = True
-        )
-    elif ad_model == "Generalized Extreme Studentized Deviate (ESD)":
-        grid2 = grid(1, vertical_align = True)
-        alpha = grid2.slider(
-            label = "Alpha",
-            min_value = 0.0,
-            max_value = 1.0,
-            value = 0.3,
-            step = 0.1
-        )
-        gesd_ad = GeneralizedESDTestAD(
-            alpha = alpha
-        )
-        anomalies = gesd_ad.fit_detect(ad_data)
-        anomalies = anomalies[anomalies == True]
-        anomalies = data_yf[data_yf.index.isin(anomalies.index)][feature]
-        fig = go.Figure()
-        fig.add_trace(
-            go.Scatter(
-                x = data_yf.index,
-                y = data_yf[feature],
-                mode = "lines",
-                name = feature
+            st.plotly_chart(
+                fig,
+                use_container_width = True
             )
-        )
-        fig.add_trace(
-            go.Scatter(
-                x = anomalies.index,
-                y = anomalies,
-                mode = "markers",
-                marker = {
-                    "color": "red"
-                },
-                name = "Anomalies"
+        elif ad_model == "Quantile":
+            grid2 = grid(2, vertical_align = True)
+            low_threshold = grid2.slider(
+                label = "Low (Quantile)",
+                min_value = 0.0,
+                max_value = 1.0,
+                value = 0.01
             )
-        )
-        st.plotly_chart(
-            fig,
-            use_container_width = True
-        )
-        
+            high_threshold = grid2.slider(
+                label = "High (Quantile)",
+                min_value = 0.0,
+                max_value = 1.0,
+                value = 0.99
+            )
+            quantile_ad = QuantileAD(
+                high = high_threshold,
+                low = low_threshold
+            )
+            anomalies = quantile_ad.fit_detect(ad_data)
+            anomalies = anomalies[anomalies == True]
+            anomalies = data_yf[data_yf.index.isin(anomalies.index)][feature]
+            fig = go.Figure()
+            fig.add_trace(
+                go.Scatter(
+                    x = data_yf.index,
+                    y = data_yf[feature],
+                    mode = "lines",
+                    name = feature
+                )
+            )
+            fig.add_trace(
+                go.Scatter(
+                    x = anomalies.index,
+                    y = anomalies,
+                    mode = "markers",
+                    marker = {
+                        "color": "red"
+                    },
+                    name = "Anomalies"
+                )
+            )
+            st.plotly_chart(
+                fig,
+                use_container_width = True
+            )
+        elif ad_model == "Inter Quartile Range":
+            grid2 = grid(1, vertical_align = True)
+            IQR = grid2.slider(
+                label = "Inter Quartile Range",
+                min_value = 0.0,
+                max_value = 3.0,
+                value = 0.0
+            )
+            interquartile_ad = InterQuartileRangeAD(
+                c = IQR
+            )
+            anomalies = interquartile_ad.fit_detect(ad_data)
+            anomalies = anomalies[anomalies == True]
+            anomalies = data_yf[data_yf.index.isin(anomalies.index)][feature]
+            fig = go.Figure()
+            fig.add_trace(
+                go.Scatter(
+                    x = data_yf.index,
+                    y = data_yf[feature],
+                    mode = "lines",
+                    name = feature
+                )
+            )
+            fig.add_trace(
+                go.Scatter(
+                    x = anomalies.index,
+                    y = anomalies,
+                    mode = "markers",
+                    marker = {
+                        "color": "red"
+                    },
+                    name = "Anomalies"
+                )
+            )
+            st.plotly_chart(
+                fig,
+                use_container_width = True
+            )
+        elif ad_model == "Generalized Extreme Studentized Deviate (ESD)":
+            grid2 = grid(1, vertical_align = True)
+            alpha = grid2.slider(
+                label = "Alpha",
+                min_value = 0.0,
+                max_value = 1.0,
+                value = 0.3,
+                step = 0.1
+            )
+            gesd_ad = GeneralizedESDTestAD(
+                alpha = alpha
+            )
+            anomalies = gesd_ad.fit_detect(ad_data)
+            anomalies = anomalies[anomalies == True]
+            anomalies = data_yf[data_yf.index.isin(anomalies.index)][feature]
+            fig = go.Figure()
+            fig.add_trace(
+                go.Scatter(
+                    x = data_yf.index,
+                    y = data_yf[feature],
+                    mode = "lines",
+                    name = feature
+                )
+            )
+            fig.add_trace(
+                go.Scatter(
+                    x = anomalies.index,
+                    y = anomalies,
+                    mode = "markers",
+                    marker = {
+                        "color": "red"
+                    },
+                    name = "Anomalies"
+                )
+            )
+            st.plotly_chart(
+                fig,
+                use_container_width = True
+            )
+        elif ad_model == "Persist":
+            grid2 = grid(2, vertical_align = True)
+            c = grid2.slider(
+                label = "C",
+                min_value = 0.0,
+                max_value = 5.0,
+                value = 3.0
+            )
+            side = grid2.selectbox(
+                label = "Side",
+                options = [
+                    "positive",
+                    "negative"
+                ]
+            )
+            persist_ad = PersistAD(c = c, side = side)
+            anomalies = persist_ad.fit_detect(ad_data)
+            anomalies = anomalies[anomalies == True]
+            anomalies = data_yf[data_yf.index.isin(anomalies.index)][feature]
+            fig = go.Figure()
+            fig.add_trace(
+                go.Scatter(
+                    x = data_yf.index,
+                    y = data_yf[feature],
+                    mode = "lines",
+                    name = feature
+                )
+            )
+            fig.add_trace(
+                go.Scatter(
+                    x = anomalies.index,
+                    y = anomalies,
+                    mode = "markers",
+                    marker = {
+                        "color": "red"
+                    },
+                    name = "Anomalies"
+                )
+            )
+            st.plotly_chart(
+                fig,
+                use_container_width = True
+            )
+    except:
+        st.error("Not enough data to process. Choose another financial asset.")  
