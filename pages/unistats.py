@@ -1710,12 +1710,15 @@ with main_tabs[4]: #VOLATILITY TAB
                     last_obs = SPLIT_DATE,
                     disp = "off"
                 )
-                forecasts = fitted_model.forecast(
-                    horizon = 3,
-                    start = SPLIT_DATE,
-                    method = "bootstrap",
-                    reindex = False
-                )
+                try:
+                    forecasts = fitted_model.forecast(
+                        horizon = 3,
+                        start = SPLIT_DATE,
+                        method = "bootstrap",
+                        reindex = False
+                    )
+                except:
+                    st.error("Start must include more than 100 observation. Increase the period time in the filter.")
                 fig = go.Figure()
                 for x in forecasts.variance.columns:
                     fig.add_trace(
