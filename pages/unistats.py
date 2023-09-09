@@ -1618,9 +1618,9 @@ with main_tabs[4]: #VOLATILITY TAB
                     start = SPLIT_DATE,
                     reindex = False
                 )
-                fig = go.Figure()
+                fig2 = go.Figure()
                 for x in forecasts.variance.columns:
-                    fig.add_trace(
+                    fig2.add_trace(
                         go.Scatter(
                             x = forecasts.variance.index,
                             y = forecasts.variance[x],
@@ -1628,8 +1628,8 @@ with main_tabs[4]: #VOLATILITY TAB
                             name = x
                         )
                     )
-                fig.layout.title = "Analytical forecasts for different horizons"
-                st.plotly_chart(fig)
+                fig2.layout.title = "Analytical forecasts for different horizons"
+                st.plotly_chart(fig2)
         with subtabs[1]:
             st.write("$$\\underline{\\huge{\\textbf{Simulation Forecasts}}}$$")
             st.write("$$\\text{GARCH - Generalized Autoregressive Conditional Heteroskedasticity}$$")
@@ -1667,9 +1667,9 @@ with main_tabs[4]: #VOLATILITY TAB
                     method = "simulation",
                     reindex = False
                 )
-                fig = go.Figure()
+                fig3 = go.Figure()
                 for x in forecasts.variance.columns:
-                    fig.add_trace(
+                    fig3.add_trace(
                         go.Scatter(
                             x = forecasts.variance.index,
                             y = forecasts.variance[x],
@@ -1677,8 +1677,8 @@ with main_tabs[4]: #VOLATILITY TAB
                             name = x
                         )
                     )
-                fig.layout.title = "Simulation forecasts for different horizons"
-                st.plotly_chart(fig)
+                fig3.layout.title = "Simulation forecasts for different horizons"
+                st.plotly_chart(fig3)
         with subtabs[2]:
             st.write("$$\\underline{\\huge{\\textbf{Bootstrap Forecasts}}}$$")
             st.write("$$\\text{GARCH - Generalized Autoregressive Conditional Heteroskedasticity}$$")
@@ -1719,9 +1719,9 @@ with main_tabs[4]: #VOLATILITY TAB
                     )
                 except:
                     st.error("Start must include more than 100 observation. Increase the period time in the filter.")
-                fig = go.Figure()
+                fig4 = go.Figure()
                 for x in forecasts.variance.columns:
-                    fig.add_trace(
+                    fig4.add_trace(
                         go.Scatter(
                             x = forecasts.variance.index,
                             y = forecasts.variance[x],
@@ -1729,6 +1729,6 @@ with main_tabs[4]: #VOLATILITY TAB
                             name = x
                         )
                     )
-                fig.layout.title = "Bootstrap forecasts for different horizons"
-                st.plotly_chart(fig)
+                fig4.layout.title = "Bootstrap forecasts for different horizons"
+                st.plotly_chart(fig4)
 
