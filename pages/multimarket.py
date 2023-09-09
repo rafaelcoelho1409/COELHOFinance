@@ -4,8 +4,12 @@ import investpy
 import datetime as dt
 import pandas as pd
 import yfinance as yf
+import numpy as np
 import plotly.graph_objects as go
 import plotly.express as px
+from plotly.subplots import make_subplots
+#MODELS
+from arch import arch_model
 #STREAMLIT THIRD-PARTY
 from streamlit_extras.grid import grid
 from streamlit_extras.metric_cards import style_metric_cards
@@ -139,6 +143,7 @@ with st.sidebar:
 
 main_tabs = st.tabs([
         "$$\\textbf{MULTIMARKET}$$",
+        "$$\\textbf{VOLATILITY}$$",
         "$$\\textbf{NEWS}$$"
 ])
 
@@ -196,7 +201,81 @@ with main_tabs[0]: #COMPARISON TAB
             use_container_width = True)
     except:
         pass
-with main_tabs[1]: #NEWS TAB
+with main_tabs[1]:
+    st.write("$$\\underline{\\huge{\\textbf{Multivariate Volatility Forecast}}}$$")
+    data = multidata_yf[[x for x in multidata_yf.columns if x[0] == feature_filter]]
+    returns = 100 * data[feature_filter].pct_change().dropna()
+    cols = st.columns(2)
+    with cols[0]:
+        fig = make_subplots(
+            rows = len(returns.columns),
+            cols = 1
+        )
+        for i, x in enumerate(returns.columns):
+            fig.add_trace(
+                go.Scatter(
+                    x = returns.index,
+                    y = returns[x],
+                    mode = "lines",
+                    name = x
+                ),
+                row = i + 1,
+                col = 1
+            )
+        fig.update_layout(
+            height = 800
+        )
+        fig.layout.title = "RETURNS"
+        st.plotly_chart(fig)
+    with cols[1]:
+        st.write("$$\\huge{\\textbf{Conditional Correlation Matrix}}$$")
+        coeffs, cond_vol, std_resids, models = [], [], [], []
+        with st.spinner(
+            text = "Loading GARCH models"
+        ):
+            for asset in returns.columns:
+                model = arch_model(
+                    returns[asset],
+                    mean = "constant",
+                    vol = "GARCH",
+                    p = 1,
+                    q = 1
+                )
+                model = model.fit(
+                    update_freq = 0,
+                    disp = "off"
+                )
+                coeffs.append(model.params)
+                cond_vol.append(model.conditional_volatility)
+                std_resids.append(model.std_resid)
+                models.append(model)
+            coeffs_df = pd.DataFrame(coeffs, index = returns.columns)
+            cond_vol_df = pd.DataFrame(cond_vol).transpose().set_axis(returns.columns, axis = "columns")
+            std_resids_df = pd.DataFrame(std_resids).transpose().set_axis(returns.columns, axis = "columns")
+            #CONDITIONAL CORRELATION MATRIX (R)
+            R = std_resids_df.transpose().dot(std_resids_df).div(len(std_resids_df))
+            diag = []
+            D = np.zeros((len(feature_filter), len(feature_filter)))
+            for model in models:
+                diag.append(
+                    model.forecast(horizon = 1).variance.iloc[-1, 0]
+                )
+            #obtain volatility from variance
+            diag = np.sqrt(diag)
+            np.fill_diagonal(D, diag)
+            #calculate the conditional covariance matrix
+            H = np.matmul(np.matmul(D, R.values), D)
+            H = pd.DataFrame(H, columns = returns.columns, index = returns.columns)
+        #st.write(H)
+        fig3 = px.imshow(
+            H,
+            text_auto = True,
+            aspect = "auto",
+            color_continuous_scale = "RdBu_r")
+        st.plotly_chart(
+            fig3,
+            use_container_width = True)
+with main_tabs[2]: #NEWS TAB
     st.write("$$\\underline{\\huge{\\textbf{Latest News}}}$$")
     try:
         subtabs = st.tabs(element.tolist())

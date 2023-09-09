@@ -13,7 +13,7 @@ option_menu()
 
 grid1 = grid([1, 5], vertical_align = True)
 grid1.image(
-    "app/static/coelho_finance_logo.png",
+    "assets/coelho_finance_logo.png",
 )
 grid1.markdown(
     """<h2 style='text-align: center'>A new powerful tool to help 

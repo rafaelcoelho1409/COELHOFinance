@@ -2,7 +2,6 @@ import streamlit as st
 from streamlit_extras.grid import grid
 from streamlit_card import card
 from functions import option_menu
-from functions import image_link
 
 st.set_page_config(
     page_title = "COELHO Finance - About Us",
@@ -19,7 +18,7 @@ with st.expander(
 ):
     st.write("$$\\underline{\\Large{\\textbf{Author}}}$$")
     grid1 = grid([1, 4], vertical_align = True)
-    grid1.image("app/static/rafael_coelho_photo.jpeg")
+    grid1.image("assets/rafael_coelho_photo.jpeg")
     grid1.markdown("""<div style='font-size:25px'>
     Rafael Coelho is a Brazilian Mathematics student 
     who is passionated for Data Science and Artificial Intelligence

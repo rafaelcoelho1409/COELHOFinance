@@ -8,6 +8,7 @@ import plotly.graph_objects as go
 import plotly.express as px
 import pandas_ta as ta
 import ruptures as rpt
+from arch import arch_model
 from plotly.subplots import make_subplots
 #FORECAST MODELS
 from sktime.transformations.series.outlier_detection import HampelFilter
@@ -192,7 +193,8 @@ main_tabs = st.tabs([
         "$$\\textbf{UNISTATS}$$",
         "$$\\textbf{INDICATORS}$$",
         "$$\\textbf{FORECAST}$$",
-        "$$\\textbf{ANOMALY DETECTION}$$"
+        "$$\\textbf{ANOMALY DETECTION}$$",
+        "$$\\textbf{VOLATILITY}$$",
 ])
 
 with main_tabs[0]: #UNIMARKET TAB
@@ -1475,4 +1477,255 @@ with main_tabs[3]:
                 use_container_width = True
             )
     except:
-        st.error("Not enough data to process. Choose another financial asset.")  
+        st.error("Not enough data to process. Choose another financial asset.")
+with main_tabs[4]: #VOLATILITY TAB
+    tabs = st.tabs([
+        "$$\\textbf{Stock returns' volatility}$$",
+        "$$\\textbf{Volatility Forecast}$$"
+    ])
+    returns = 100 * data_yf["Adj Close"].pct_change().dropna()
+    returns.name = "asset_returns"
+    with tabs[0]:
+        subtabs = st.tabs([
+            "ARCH Model",
+            "GARCH Model"
+        ])
+        with subtabs[0]:
+            st.write("$$\\underline{\\huge{\\textbf{ARCH Model}}}$$")
+            st.write("$$\\text{ARCH - Autoregressive Conditional Heteroskedasticity}$$")
+            cols = st.columns(2)
+            with cols[0]:
+                st.write("$$\\huge{\\textbf{Returns}}$$")
+                fig = go.Figure()
+                fig.add_trace(
+                    go.Scatter(
+                        x = returns.index,
+                        y = returns,
+                        mode = "lines",
+                        name = "Returns"
+                    )
+                )
+                fig.layout.title = f"Returns - {element}"
+                st.plotly_chart(
+                    fig,
+                    use_container_width = True
+                )
+            with cols[1]:
+                model = arch_model(
+                    returns,
+                    mean = "zero",
+                    vol = "ARCH",
+                    p = 1,
+                    q = 0
+                )
+                fitted_model = model.fit(disp = "off")
+                with st.expander(
+                    label = "ARCH Model - Summary"
+                ):
+                    st.write(fitted_model.summary())
+                st.pyplot(
+                    fitted_model.plot(annualize = "D"),
+                    use_container_width = True)
+        with subtabs[1]:
+            st.write("$$\\underline{\\huge{\\textbf{GARCH Model}}}$$")
+            st.write("$$\\text{GARCH - Generalized Autoregressive Conditional Heteroskedasticity}$$")
+            cols = st.columns(2)
+            with cols[0]:
+                st.write("$$\\huge{\\textbf{Returns}}$$")
+                fig = go.Figure()
+                fig.add_trace(
+                    go.Scatter(
+                        x = returns.index,
+                        y = returns,
+                        mode = "lines",
+                        name = "Returns"
+                    )
+                )
+                fig.layout.title = f"Returns - {element}"
+                st.plotly_chart(
+                    fig,
+                    use_container_width = True
+                )
+            with cols[1]:
+                model = arch_model(
+                    returns,
+                    mean = "zero",
+                    vol = "GARCH",
+                    p = 1,
+                    q = 1
+                )
+                fitted_model = model.fit(disp = "off")
+                with st.expander(
+                    label = "GARCH Model - Summary"
+                ):
+                    st.write(fitted_model.summary())
+                st.pyplot(
+                    fitted_model.plot(annualize = "D"),
+                    use_container_width = True)
+    with tabs[1]:
+        subtabs = st.tabs([
+            "Analytical Forecasts",
+            "Simulation Forecasts",
+            "Bootstrap Forecasts"
+        ])
+        model = arch_model(
+            returns,
+            mean = "zero",
+            vol = "GARCH",
+            dist = "t",
+            p = 1,
+            q = 1
+        )
+        pred_int_dict = {
+                "30 days": 30,
+                "60 days": 60,
+                "6 months": 180,
+                "1 year": 365
+        }
+        with subtabs[0]:
+            st.write("$$\\underline{\\huge{\\textbf{Analytical Forecasts}}}$$")
+            st.write("$$\\text{GARCH - Generalized Autoregressive Conditional Heteroskedasticity}$$")
+            cols = st.columns(2)
+            with cols[0]:
+                st.write("$$\\huge{\\textbf{Returns}}$$")
+                fig = go.Figure()
+                fig.add_trace(
+                    go.Scatter(
+                        x = returns.index,
+                        y = returns,
+                        mode = "lines",
+                        name = "Returns"
+                    )
+                )
+                fig.layout.title = f"Returns - {element}"
+                st.plotly_chart(
+                    fig,
+                    use_container_width = True
+                )
+            with cols[1]:
+                prediction_interval = st.selectbox(
+                    label = "Prediction interval",
+                    options = pred_int_dict.keys(),
+                    key = "pred_int_1"
+                )
+                SPLIT_DATE = dt.datetime.now() - dt.timedelta(days = pred_int_dict[prediction_interval])
+                fitted_model = model.fit(
+                    last_obs = SPLIT_DATE,
+                    disp = "off"
+                )
+                forecasts = fitted_model.forecast(
+                    horizon = 3,
+                    start = SPLIT_DATE,
+                    reindex = False
+                )
+                fig = go.Figure()
+                for x in forecasts.variance.columns:
+                    fig.add_trace(
+                        go.Scatter(
+                            x = forecasts.variance.index,
+                            y = forecasts.variance[x],
+                            mode = "lines",
+                            name = x
+                        )
+                    )
+                fig.layout.title = "Analytical forecasts for different horizons"
+                st.plotly_chart(fig)
+        with subtabs[1]:
+            st.write("$$\\underline{\\huge{\\textbf{Simulation Forecasts}}}$$")
+            st.write("$$\\text{GARCH - Generalized Autoregressive Conditional Heteroskedasticity}$$")
+            cols = st.columns(2)
+            with cols[0]:
+                st.write("$$\\huge{\\textbf{Returns}}$$")
+                fig = go.Figure()
+                fig.add_trace(
+                    go.Scatter(
+                        x = returns.index,
+                        y = returns,
+                        mode = "lines",
+                        name = "Returns"
+                    )
+                )
+                fig.layout.title = f"Returns - {element}"
+                st.plotly_chart(
+                    fig,
+                    use_container_width = True
+                )
+            with cols[1]:
+                prediction_interval = st.selectbox(
+                    label = "Prediction interval",
+                    options = pred_int_dict.keys(),
+                    key = "pred_int_2"
+                )
+                SPLIT_DATE = dt.datetime.now() - dt.timedelta(days = pred_int_dict[prediction_interval])
+                fitted_model = model.fit(
+                    last_obs = SPLIT_DATE,
+                    disp = "off"
+                )
+                forecasts = fitted_model.forecast(
+                    horizon = 3,
+                    start = SPLIT_DATE,
+                    method = "simulation",
+                    reindex = False
+                )
+                fig = go.Figure()
+                for x in forecasts.variance.columns:
+                    fig.add_trace(
+                        go.Scatter(
+                            x = forecasts.variance.index,
+                            y = forecasts.variance[x],
+                            mode = "lines",
+                            name = x
+                        )
+                    )
+                fig.layout.title = "Simulation forecasts for different horizons"
+                st.plotly_chart(fig)
+        with subtabs[2]:
+            st.write("$$\\underline{\\huge{\\textbf{Bootstrap Forecasts}}}$$")
+            st.write("$$\\text{GARCH - Generalized Autoregressive Conditional Heteroskedasticity}$$")
+            cols = st.columns(2)
+            with cols[0]:
+                st.write("$$\\huge{\\textbf{Returns}}$$")
+                fig = go.Figure()
+                fig.add_trace(
+                    go.Scatter(
+                        x = returns.index,
+                        y = returns,
+                        mode = "lines",
+                        name = "Returns"
+                    )
+                )
+                fig.layout.title = f"Returns - {element}"
+                st.plotly_chart(
+                    fig,
+                    use_container_width = True
+                )
+            with cols[1]:
+                prediction_interval = st.selectbox(
+                    label = "Prediction interval",
+                    options = pred_int_dict.keys(),
+                    key = "pred_int_3"
+                )
+                SPLIT_DATE = dt.datetime.now() - dt.timedelta(days = pred_int_dict[prediction_interval])
+                fitted_model = model.fit(
+                    last_obs = SPLIT_DATE,
+                    disp = "off"
+                )
+                forecasts = fitted_model.forecast(
+                    horizon = 3,
+                    start = SPLIT_DATE,
+                    method = "bootstrap",
+                    reindex = False
+                )
+                fig = go.Figure()
+                for x in forecasts.variance.columns:
+                    fig.add_trace(
+                        go.Scatter(
+                            x = forecasts.variance.index,
+                            y = forecasts.variance[x],
+                            mode = "lines",
+                            name = x
+                        )
+                    )
+                fig.layout.title = "Bootstrap forecasts for different horizons"
+                st.plotly_chart(fig)
+
