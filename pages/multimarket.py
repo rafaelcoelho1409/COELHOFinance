@@ -255,7 +255,7 @@ with main_tabs[1]:
             #CONDITIONAL CORRELATION MATRIX (R)
             R = std_resids_df.transpose().dot(std_resids_df).div(len(std_resids_df))
             diag = []
-            D = np.zeros((len(feature_filter), len(feature_filter)))
+            D = np.zeros((len(element_filter), len(element_filter)))
             for model in models:
                 diag.append(
                     model.forecast(horizon = 1).variance.iloc[-1, 0]
@@ -264,7 +264,8 @@ with main_tabs[1]:
             diag = np.sqrt(diag)
             np.fill_diagonal(D, diag)
             #calculate the conditional covariance matrix
-            H = np.matmul(np.matmul(D, R.values), D)
+            D_R = np.matmul(D, R.values)
+            H = np.matmul(D_R, D)
             H = pd.DataFrame(H, columns = returns.columns, index = returns.columns)
         #st.write(H)
         fig3 = px.imshow(
