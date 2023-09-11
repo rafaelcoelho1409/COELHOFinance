@@ -1,10 +1,7 @@
 import streamlit as st
 import os
 import json
-import investpy
-import datetime as dt
 import pandas as pd
-import yfinance as yf
 import numpy as np
 import plotly.graph_objects as go
 import plotly.express as px
