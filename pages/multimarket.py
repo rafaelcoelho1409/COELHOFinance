@@ -1,4 +1,5 @@
 import streamlit as st
+import os
 import json
 import investpy
 import datetime as dt
@@ -7,6 +8,7 @@ import yfinance as yf
 import numpy as np
 import plotly.graph_objects as go
 import plotly.express as px
+import quantstats as qs
 from plotly.subplots import make_subplots
 #MODELS
 from arch import arch_model
@@ -25,7 +27,10 @@ from functions import (
     funds_filter_func2,
     etfs_filter_func2,
     bonds_filter_func2,
-    commodities_filter_func2)
+    commodities_filter_func2,
+    efficient_frontier,
+    efficient_frontier2,
+    conditional_correlation_matrix)
 
 st.set_page_config(
     page_title = "COELHO Finance - MULTIMARKET",
@@ -144,6 +149,7 @@ with st.sidebar:
 main_tabs = st.tabs([
         "$$\\textbf{MULTIMARKET}$$",
         "$$\\textbf{VOLATILITY}$$",
+        "$$\\textbf{ASSET ALLOCATION}$$",
         "$$\\textbf{NEWS}$$"
 ])
 
@@ -201,82 +207,113 @@ with main_tabs[0]: #COMPARISON TAB
             use_container_width = True)
     except:
         pass
-with main_tabs[1]:
+with main_tabs[1]: #VOLATILITY TAB
     st.write("$$\\underline{\\huge{\\textbf{Multivariate Volatility Forecast}}}$$")
-    data = multidata_yf[[x for x in multidata_yf.columns if x[0] == feature_filter]]
-    returns = 100 * data[feature_filter].pct_change().dropna()
-    cols = st.columns(2)
-    with cols[0]:
-        fig = make_subplots(
-            rows = len(returns.columns),
-            cols = 1
-        )
-        for i, x in enumerate(returns.columns):
-            fig.add_trace(
-                go.Scatter(
-                    x = returns.index,
-                    y = returns[x],
-                    mode = "lines",
-                    name = x
-                ),
-                row = i + 1,
-                col = 1
+    try:
+        data = multidata_yf[[x for x in multidata_yf.columns if x[0] == feature_filter]]
+        returns = 100 * data[feature_filter].pct_change().dropna()
+        cols = st.columns(2)
+        with cols[0]:
+            fig = make_subplots(
+                rows = len(returns.columns),
+                cols = 1
             )
-        fig.update_layout(
-            height = 800
-        )
-        fig.layout.title = "RETURNS"
-        st.plotly_chart(fig)
-    with cols[1]:
-        st.write("$$\\huge{\\textbf{Conditional Correlation Matrix}}$$")
-        coeffs, cond_vol, std_resids, models = [], [], [], []
-        with st.spinner(
-            text = "Loading GARCH models"
-        ):
-            for asset in returns.columns:
-                model = arch_model(
-                    returns[asset],
-                    mean = "constant",
-                    vol = "GARCH",
-                    p = 1,
-                    q = 1
+            for i, x in enumerate(returns.columns):
+                fig.add_trace(
+                    go.Scatter(
+                        x = returns.index,
+                        y = returns[x],
+                        mode = "lines",
+                        name = x
+                    ),
+                    row = i + 1,
+                    col = 1
                 )
-                model = model.fit(
-                    update_freq = 0,
-                    disp = "off"
+            fig.update_layout(
+                height = 800
+            )
+            fig.layout.title = "RETURNS"
+            st.plotly_chart(fig)
+        with cols[1]:
+            st.write("$$\\huge{\\textbf{Conditional Correlation Matrix}}$$")
+            fig3 = conditional_correlation_matrix(returns, element_filter)
+            st.plotly_chart(
+                fig3,
+                use_container_width = True)
+    except:
+        st.write("No informations.")
+with main_tabs[2]: #ASSET ALLOCATION TAB
+    tabs = st.tabs([
+        "$$\\textbf{Equally-weighted Portfolio}$$",
+        "$$\\textbf{Efficient Frontier}$$",
+        "$$\\textbf{Efficient Frontier \& Risk Aversion}$$",
+    ])
+    with tabs[0]:
+        st.write("$$\\underline{\\huge{\\textbf{Equally-weighted Portfolio}}}$$")
+        try:
+            n_assets = len(element_filter)
+            returns = multidata_yf[feature_filter].pct_change().dropna()
+            portfolio_weights = n_assets * [1 / n_assets]
+            portfolio_returns = pd.Series(
+                np.dot(portfolio_weights, returns.T),
+                index = returns.index
+            )
+            img_code = np.random.randint(1000000)
+            qs.reports.html(
+                portfolio_returns,
+                benchmark = "SPY",
+                title = "1/n portfolio",
+                output = f"assets/portfolio_evaluation_{img_code}.html"
+            )
+            st.download_button(
+                label = "Get Full Report",
+                data = open(f"assets/portfolio_evaluation_{img_code}.html", "r").read(),
+                file_name = f"assets/portfolio_evaluation_{img_code}.html",
+                mime = "text/html",
+                use_container_width = True
+            )
+            os.remove(f"assets/portfolio_evaluation_{img_code}.html")
+            st.write("$$\\huge{\\textbf{1/n Portfolio's Performance}}$$")
+            qs.plots.snapshot(
+                portfolio_returns,
+                savefig = f"assets/portfolio_returns_{img_code}.png"
+            )
+            st.image(
+                f"assets/portfolio_returns_{img_code}.png",
+                use_column_width = True)
+            os.remove(f"assets/portfolio_returns_{img_code}.png")
+        except:
+            st.write("No informations.")
+    with tabs[1]:
+        st.write("$$\\underline{\\huge{\\textbf{Efficient Frontier (Monte Carlo Simulation)}}}$$")
+        try:
+            fig = efficient_frontier(multidata_yf, element, feature_filter)
+            st.pyplot(
+                fig,
+                use_container_width = True
+            )
+        except:
+            st.write("No informations.")
+    with tabs[2]:
+        st.write("$$\\underline{\\huge{\\textbf{Efficient Frontier \& Risk Aversion}}}$$")
+        try:
+            fig1, fig2 = efficient_frontier2(multidata_yf, feature_filter, element)
+            cols = st.columns(2)
+            with cols[0]:
+                st.write("$$\\Large{\\textbf{Risk-Aversion Allocation}}$$")
+                st.pyplot(
+                    fig1,
+                    use_container_width = True
                 )
-                coeffs.append(model.params)
-                cond_vol.append(model.conditional_volatility)
-                std_resids.append(model.std_resid)
-                models.append(model)
-            coeffs_df = pd.DataFrame(coeffs, index = returns.columns)
-            cond_vol_df = pd.DataFrame(cond_vol).transpose().set_axis(returns.columns, axis = "columns")
-            std_resids_df = pd.DataFrame(std_resids).transpose().set_axis(returns.columns, axis = "columns")
-            #CONDITIONAL CORRELATION MATRIX (R)
-            R = std_resids_df.transpose().dot(std_resids_df).div(len(std_resids_df))
-            diag = []
-            D = np.zeros((len(element_filter), len(element_filter)))
-            for model in models:
-                diag.append(
-                    model.forecast(horizon = 1).variance.iloc[-1, 0]
+            with cols[1]:
+                st.write("$$\\Large{\\textbf{Efficient Frontier (Convex Optimization)}}$$")
+                st.pyplot(
+                    fig2,
+                    use_container_width = True
                 )
-            #obtain volatility from variance
-            diag = np.sqrt(diag)
-            np.fill_diagonal(D, diag)
-            #calculate the conditional covariance matrix
-            D_R = np.matmul(D, R.values)
-            H = np.matmul(D_R, D)
-            H = pd.DataFrame(H, columns = returns.columns, index = returns.columns)
-        #st.write(H)
-        fig3 = px.imshow(
-            H,
-            text_auto = True,
-            aspect = "auto",
-            color_continuous_scale = "RdBu_r")
-        st.plotly_chart(
-            fig3,
-            use_container_width = True)
-with main_tabs[2]: #NEWS TAB
+        except:
+            st.write("No informations.")
+with main_tabs[3]: #NEWS TAB
     st.write("$$\\underline{\\huge{\\textbf{Latest News}}}$$")
     try:
         subtabs = st.tabs(element.tolist())

@@ -6,11 +6,15 @@ import pandas as pd
 import json
 import investpy
 import numpy as np
+import cvxpy as cp
+import plotly.express as px
 #ANOMALY DETECTION
 from adtk.data import validate_series
 from streamlit_extras.row import row
 from streamlit_extras.metric_cards import style_metric_cards
 from st_pages import show_pages, Page, Section, add_indentation
+#MODELS
+from arch import arch_model
 
 @st.cache_resource
 def get_unimarket(
@@ -1273,6 +1277,208 @@ def commodities_filter_func2(periods_and_intervals):
         feature_filter
     )
 
+@st.cache_resource
+def simulate_gbm(s_0, mu, sigma, n_sims, T, N, random_seed = 42):
+    np.random.seed(random_seed)
+    dt = T / N
+    dW = np.random.normal(scale = np.sqrt(dt), size = (n_sims, N))
+    W = np.cumsum(dW, axis = 1)
+    time_step = np.linspace(dt, T, N)
+    time_steps = np.broadcast_to(time_step, (n_sims, N))
+    S_t = s_0 * np.exp((mu - 0.5 * sigma ** 2) * time_steps + sigma * W)
+    S_t = np.insert(S_t, 0, s_0, axis = 1)
+    return S_t
 
+@st.cache_data
+def efficient_frontier(multidata_yf, element, feature_filter):
+    import matplotlib.pyplot as plt
+    from matplotlib.lines import Line2D
+    N_PORTFOLIOS = 10 ** 5
+    N_DAYS = 252
+    n_assets = len(element)
+    returns_df = multidata_yf[feature_filter].pct_change().dropna()
+    #annualized returns
+    avg_returns = returns_df.mean() * N_DAYS
+    cov_mat = returns_df.cov() * N_DAYS
+    #portfolio weights
+    np.random.seed(42)
+    weights = np.random.random(size = (N_PORTFOLIOS, n_assets))
+    weights /= np.sum(weights, axis = 1)[:, np.newaxis]
+    #portfolio metrics
+    portf_rtns = np.dot(weights, avg_returns)
+    portf_vol = []
+    for i in range(0, len(weights)):
+        vol = np.sqrt(
+            np.dot(
+                weights[i].T,
+                np.dot(cov_mat, weights[i])
+            )
+        )
+        portf_vol.append(vol)
+    portf_vol = np.array(portf_vol)
+    portf_sharpe_ratio = portf_rtns / portf_vol
+    portf_results_df = pd.DataFrame(
+        {
+            "returns": portf_rtns,
+            "volatility": portf_vol,
+            "sharpe_ratio": portf_sharpe_ratio
+        }
+    )
+    N_POINTS = 100
+    ef_rtn_list, ef_vol_list = [], []
+    possible_ef_rtns = np.linspace(
+        portf_results_df["returns"].min(),
+        portf_results_df["returns"].max(),
+        N_POINTS
+    )
+    #locate the points creating the efficient frontier
+    possible_ef_rtns = np.round(possible_ef_rtns, 2)
+    portf_rtns = np.round(portf_rtns, 2)
+    for rtn in possible_ef_rtns:
+        if rtn in portf_rtns:
+            ef_rtn_list.append(rtn)
+            matched_ind = np.where(portf_rtns == rtn)
+            ef_vol_list.append(
+                np.min(
+                    portf_vol[matched_ind]
+                )
+            )
+    #plot the efficient frontier
+    fig, ax = plt.subplots()
+    portf_results_df.plot(
+        kind = "scatter", 
+        x = "volatility",
+        y = "returns", 
+        c = "sharpe_ratio",
+        cmap = "RdYlGn", 
+        edgecolors = "black",
+        ax = ax)
+    ax.set(
+        xlabel = "Volatility",
+        ylabel = "Expected Returns",
+        title = "Efficient Frontier")
+    ax.plot(ef_vol_list, ef_rtn_list, "b--")
 
+    for asset_index in range(n_assets):
+        ax.scatter(
+            x = np.sqrt(cov_mat.iloc[asset_index, asset_index]),
+            y = avg_returns[asset_index],
+            marker = list(Line2D.markers.keys())[asset_index],
+            s = 150, 
+            color = "black",
+            label = element.reset_index(drop = True).iloc[asset_index])
+    ax.legend()
+    return ax.figure
 
+@st.cache_data
+def efficient_frontier2(
+    multidata_yf,
+    feature_filter,
+    element
+):
+    import matplotlib.pyplot as plt
+    from matplotlib.lines import Line2D
+    N_DAYS = 252
+    n_assets = len(element)
+    returns_df = multidata_yf[feature_filter].pct_change().dropna()
+    avg_returns = returns_df.mean() * N_DAYS
+    avg_returns = avg_returns.values
+    cov_mat = returns_df.cov() * N_DAYS
+    cov_mat = cov_mat.values
+    #optimization
+    weights = cp.Variable(n_assets)
+    gamma_par = cp.Parameter(nonneg = True)
+    portf_rtn_cvx = avg_returns @ weights
+    portf_vol_cvx = cp.quad_form(weights, cov_mat)
+    objective_function = cp.Maximize(
+        portf_rtn_cvx - gamma_par * portf_vol_cvx
+    )
+    problem = cp.Problem(
+        objective_function,
+        [cp.sum(weights) == 1, weights >= 0]
+    )
+    #efficient frontier
+    N_POINTS = 25
+    portf_rtn_cvx_ef, portf_vol_cvx_ef, weights_ef = [], [], []
+    gamma_range = np.logspace(-3, 3, num = N_POINTS)
+    for gamma in gamma_range:
+        gamma_par.value = gamma
+        problem.solve()
+        portf_vol_cvx_ef.append(cp.sqrt(portf_vol_cvx).value)
+        portf_rtn_cvx_ef.append(portf_rtn_cvx.value)
+        weights_ef.append(weights.value)
+    #risk aversion allocations plot
+    weights_df = pd.DataFrame(weights_ef, columns = element, index = np.round(gamma_range, 3))
+    ax1 = weights_df.plot(kind = "bar", stacked = True)
+    ax1.set(
+        title = "Weights allocation per risk-aversion level",
+        xlabel = "$\\gamma$",
+        ylabel = "weight"
+    )
+    ax1.legend(bbox_to_anchor = (1, 1))
+    #efficient frontier plot
+    fig, ax2 = plt.subplots()
+    ax2.plot(portf_vol_cvx_ef, portf_rtn_cvx_ef, "g-")
+    for asset_index in range(n_assets):
+        plt.scatter(
+            x = np.sqrt(cov_mat[asset_index, asset_index]),
+            y = avg_returns[asset_index],
+            marker = list(Line2D.markers.keys())[asset_index],
+            label = element.reset_index(drop = True).iloc[asset_index],
+            s = 150
+        )
+    ax2.set(
+        title = "Efficient Frontier",
+        xlabel = "Volatility",
+        ylabel = "Expected Returns"
+    )
+    ax2.legend()
+    return ax1.figure, ax2.figure
+
+@st.cache_data
+def conditional_correlation_matrix(returns, element_filter):
+    coeffs, cond_vol, std_resids, models = [], [], [], []
+    with st.spinner(
+        text = "Loading GARCH models"
+    ):
+        for asset in returns.columns:
+            model = arch_model(
+                returns[asset],
+                mean = "constant",
+                vol = "GARCH",
+                p = 1,
+                q = 1
+            )
+            model = model.fit(
+                update_freq = 0,
+                disp = "off"
+            )
+            coeffs.append(model.params)
+            cond_vol.append(model.conditional_volatility)
+            std_resids.append(model.std_resid)
+            models.append(model)
+        coeffs_df = pd.DataFrame(coeffs, index = returns.columns)
+        cond_vol_df = pd.DataFrame(cond_vol).transpose().set_axis(returns.columns, axis = "columns")
+        std_resids_df = pd.DataFrame(std_resids).transpose().set_axis(returns.columns, axis = "columns")
+        #CONDITIONAL CORRELATION MATRIX (R)
+        R = std_resids_df.transpose().dot(std_resids_df).div(len(std_resids_df))
+        diag = []
+        D = np.zeros((len(element_filter), len(element_filter)))
+        for model in models:
+            diag.append(
+                model.forecast(horizon = 1).variance.iloc[-1, 0]
+            )
+        #obtain volatility from variance
+        diag = np.sqrt(diag)
+        np.fill_diagonal(D, diag)
+        #calculate the conditional covariance matrix
+        D_R = np.matmul(D, R.values)
+        H = np.matmul(D_R, D)
+        H = pd.DataFrame(H, columns = returns.columns, index = returns.columns)
+    #st.write(H)
+    fig = px.imshow(
+        H,
+        text_auto = True,
+        aspect = "auto",
+        color_continuous_scale = "RdBu_r")
+    return fig

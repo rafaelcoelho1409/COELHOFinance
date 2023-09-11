@@ -49,7 +49,7 @@ from functions import (
     cryptos_filter_func,
     bonds_filter_func,
     commodities_filter_func,
-    split_key_name)
+    simulate_gbm)
 
 PAGE_TITLE = "COELHO Finance - UNISTATS"
 st.set_page_config(
@@ -195,6 +195,7 @@ main_tabs = st.tabs([
         "$$\\textbf{FORECAST}$$",
         "$$\\textbf{ANOMALY DETECTION}$$",
         "$$\\textbf{VOLATILITY}$$",
+        "$$\\textbf{SIMULATIONS}$$",
 ])
 
 with main_tabs[0]: #UNIMARKET TAB
@@ -1202,7 +1203,7 @@ with main_tabs[2]: #FORECAST TAB
             )
         except:
             st.error("Not enough data to process. Choose another financial asset.")
-with main_tabs[3]:
+with main_tabs[3]: #ANOMALY DETECTION TAB
     st.write("$$\\underline{\\huge{\\textbf{ANOMALY DETECTION}}}$$")
     grid1 = grid(2, vertical_align = True)
     feature = grid1.selectbox(
@@ -1511,21 +1512,24 @@ with main_tabs[4]: #VOLATILITY TAB
                     use_container_width = True
                 )
             with cols[1]:
-                model = arch_model(
-                    returns,
-                    mean = "zero",
-                    vol = "ARCH",
-                    p = 1,
-                    q = 0
-                )
-                fitted_model = model.fit(disp = "off")
-                with st.expander(
-                    label = "ARCH Model - Summary"
-                ):
-                    st.write(fitted_model.summary())
-                st.pyplot(
-                    fitted_model.plot(annualize = "D"),
-                    use_container_width = True)
+                try:
+                    model = arch_model(
+                        returns,
+                        mean = "zero",
+                        vol = "ARCH",
+                        p = 1,
+                        q = 0
+                    )
+                    fitted_model = model.fit(disp = "off")
+                    with st.expander(
+                        label = "ARCH Model - Summary"
+                    ):
+                        st.write(fitted_model.summary())
+                    st.pyplot(
+                        fitted_model.plot(annualize = "D"),
+                        use_container_width = True)
+                except:
+                    st.write("No informations.")
         with subtabs[1]:
             st.write("$$\\underline{\\huge{\\textbf{GARCH Model}}}$$")
             st.write("$$\\text{GARCH - Generalized Autoregressive Conditional Heteroskedasticity}$$")
@@ -1547,21 +1551,24 @@ with main_tabs[4]: #VOLATILITY TAB
                     use_container_width = True
                 )
             with cols[1]:
-                model = arch_model(
-                    returns,
-                    mean = "zero",
-                    vol = "GARCH",
-                    p = 1,
-                    q = 1
-                )
-                fitted_model = model.fit(disp = "off")
-                with st.expander(
-                    label = "GARCH Model - Summary"
-                ):
-                    st.write(fitted_model.summary())
-                st.pyplot(
-                    fitted_model.plot(annualize = "D"),
-                    use_container_width = True)
+                try:
+                    model = arch_model(
+                        returns,
+                        mean = "zero",
+                        vol = "GARCH",
+                        p = 1,
+                        q = 1
+                    )
+                    fitted_model = model.fit(disp = "off")
+                    with st.expander(
+                        label = "GARCH Model - Summary"
+                    ):
+                        st.write(fitted_model.summary())
+                    st.pyplot(
+                        fitted_model.plot(annualize = "D"),
+                        use_container_width = True)
+                except:
+                    st.write("No informations.")
     with tabs[1]:
         subtabs = st.tabs([
             "Analytical Forecasts",
@@ -1609,27 +1616,30 @@ with main_tabs[4]: #VOLATILITY TAB
                     key = "pred_int_1"
                 )
                 SPLIT_DATE = dt.datetime.now() - dt.timedelta(days = pred_int_dict[prediction_interval])
-                fitted_model = model.fit(
-                    last_obs = SPLIT_DATE,
-                    disp = "off"
-                )
-                forecasts = fitted_model.forecast(
-                    horizon = 3,
-                    start = SPLIT_DATE,
-                    reindex = False
-                )
-                fig2 = go.Figure()
-                for x in forecasts.variance.columns:
-                    fig2.add_trace(
-                        go.Scatter(
-                            x = forecasts.variance.index,
-                            y = forecasts.variance[x],
-                            mode = "lines",
-                            name = x
-                        )
+                try:
+                    fitted_model = model.fit(
+                        last_obs = SPLIT_DATE,
+                        disp = "off"
                     )
-                fig2.layout.title = "Analytical forecasts for different horizons"
-                st.plotly_chart(fig2)
+                    forecasts = fitted_model.forecast(
+                        horizon = 3,
+                        start = SPLIT_DATE,
+                        reindex = False
+                    )
+                    fig2 = go.Figure()
+                    for x in forecasts.variance.columns:
+                        fig2.add_trace(
+                            go.Scatter(
+                                x = forecasts.variance.index,
+                                y = forecasts.variance[x],
+                                mode = "lines",
+                                name = x
+                            )
+                        )
+                    fig2.layout.title = "Analytical forecasts for different horizons"
+                    st.plotly_chart(fig2)
+                except:
+                    st.write("No informations.")
         with subtabs[1]:
             st.write("$$\\underline{\\huge{\\textbf{Simulation Forecasts}}}$$")
             st.write("$$\\text{GARCH - Generalized Autoregressive Conditional Heteroskedasticity}$$")
@@ -1657,28 +1667,31 @@ with main_tabs[4]: #VOLATILITY TAB
                     key = "pred_int_2"
                 )
                 SPLIT_DATE = dt.datetime.now() - dt.timedelta(days = pred_int_dict[prediction_interval])
-                fitted_model = model.fit(
-                    last_obs = SPLIT_DATE,
-                    disp = "off"
-                )
-                forecasts = fitted_model.forecast(
-                    horizon = 3,
-                    start = SPLIT_DATE,
-                    method = "simulation",
-                    reindex = False
-                )
-                fig3 = go.Figure()
-                for x in forecasts.variance.columns:
-                    fig3.add_trace(
-                        go.Scatter(
-                            x = forecasts.variance.index,
-                            y = forecasts.variance[x],
-                            mode = "lines",
-                            name = x
-                        )
+                try:
+                    fitted_model = model.fit(
+                        last_obs = SPLIT_DATE,
+                        disp = "off"
                     )
-                fig3.layout.title = "Simulation forecasts for different horizons"
-                st.plotly_chart(fig3)
+                    forecasts = fitted_model.forecast(
+                        horizon = 3,
+                        start = SPLIT_DATE,
+                        method = "simulation",
+                        reindex = False
+                    )
+                    fig3 = go.Figure()
+                    for x in forecasts.variance.columns:
+                        fig3.add_trace(
+                            go.Scatter(
+                                x = forecasts.variance.index,
+                                y = forecasts.variance[x],
+                                mode = "lines",
+                                name = x
+                            )
+                        )
+                    fig3.layout.title = "Simulation forecasts for different horizons"
+                    st.plotly_chart(fig3)
+                except:
+                    st.write("No informations.")
         with subtabs[2]:
             st.write("$$\\underline{\\huge{\\textbf{Bootstrap Forecasts}}}$$")
             st.write("$$\\text{GARCH - Generalized Autoregressive Conditional Heteroskedasticity}$$")
@@ -1706,29 +1719,113 @@ with main_tabs[4]: #VOLATILITY TAB
                     key = "pred_int_3"
                 )
                 SPLIT_DATE = dt.datetime.now() - dt.timedelta(days = pred_int_dict[prediction_interval])
-                fitted_model = model.fit(
-                    last_obs = SPLIT_DATE,
-                    disp = "off"
-                )
                 try:
-                    forecasts = fitted_model.forecast(
-                        horizon = 3,
-                        start = SPLIT_DATE,
-                        method = "bootstrap",
-                        reindex = False
+                    fitted_model = model.fit(
+                        last_obs = SPLIT_DATE,
+                        disp = "off"
                     )
-                except:
-                    st.error("Start must include more than 100 observation. Increase the period time in the filter.")
-                fig4 = go.Figure()
-                for x in forecasts.variance.columns:
-                    fig4.add_trace(
-                        go.Scatter(
-                            x = forecasts.variance.index,
-                            y = forecasts.variance[x],
-                            mode = "lines",
-                            name = x
+                    try:
+                        forecasts = fitted_model.forecast(
+                            horizon = 3,
+                            start = SPLIT_DATE,
+                            method = "bootstrap",
+                            reindex = False
                         )
-                    )
-                fig4.layout.title = "Bootstrap forecasts for different horizons"
-                st.plotly_chart(fig4)
-
+                    except:
+                        st.error("Start must include more than 100 observation. Increase the period time in the filter.")
+                    fig4 = go.Figure()
+                    for x in forecasts.variance.columns:
+                        fig4.add_trace(
+                            go.Scatter(
+                                x = forecasts.variance.index,
+                                y = forecasts.variance[x],
+                                mode = "lines",
+                                name = x
+                            )
+                        )
+                    fig4.layout.title = "Bootstrap forecasts for different horizons"
+                    st.plotly_chart(fig4)
+                except:
+                    st.write("No informations.")
+with main_tabs[5]: #SIMULATIONS TAB
+    st.write("$$\\underline{\\huge{\\textbf{Monte Carlo Simulations}}}$$")
+    interval_dict = {
+            "30 days": 30,
+            "60 days": 60,
+            "6 months": 180,
+            "1 year": 365
+    }
+    grid1 = grid(3, vertical_align = True)
+    feature = grid1.selectbox(
+        label = "Feature",
+        options = [
+            "Open",
+            "High",
+            "Low",
+            "Close",
+            "Adj Close",
+            "Volume"
+        ],
+        index = 4,
+        key = "sim1"
+    )
+    interval = grid1.selectbox(
+        label = "Interval",
+        options = interval_dict.keys(),
+        key = "sim2"
+    )
+    #T: forecast horizon
+    #N: number of time increments in the forecasting horizon
+    #S_0: Initial price
+    #N_SIM: Number of simulated paths
+    N_SIM = grid1.slider(
+        label = "Number of simulated paths",
+        min_value = 100,
+        max_value = 10000,
+        step = 100,
+        value = 100
+    )
+    try:
+        returns = data_yf[feature].pct_change().dropna()
+        train = returns.iloc[:-interval_dict[interval]]
+        test = returns.iloc[-interval_dict[interval]:]
+        T, N = len(test), len(test)
+        S_0 = data_yf.loc[train.index[-1], feature]
+        mu = train.mean()
+        sigma = train.std()
+        gbm_simulations = simulate_gbm(S_0, mu, sigma, N_SIM, T, N)
+        sim_df = pd.DataFrame(
+            np.transpose(gbm_simulations),
+            index = train.index[-1:].union(test.index))
+        res_df = sim_df.mean(axis = 1).to_frame()
+        res_df = res_df.join(data_yf[feature])
+        res_df.columns = ["simulation_average", f"{feature}_price"]
+        cols = st.columns(2)
+        with cols[0]:
+            st.write("$$\\huge{\\textbf{Returns}}$$")
+            fig = go.Figure()
+            fig.add_trace(
+                go.Scatter(
+                    x = returns.index,
+                    y = returns,
+                    mode = "lines",
+                    name = "Returns"
+                )
+            )
+            st.plotly_chart(
+                fig,
+                use_container_width = True
+            )
+        with cols[1]:
+            ax = sim_df.plot(
+                alpha = 0.3,
+                legend = False,
+                title = "Simulation's results"
+            )
+            ax = res_df.plot(ax = ax, color = ["red", "blue"])
+            st.pyplot(
+                ax.figure,
+                use_container_width = True
+            )
+    except:
+        st.write("No informations.")
