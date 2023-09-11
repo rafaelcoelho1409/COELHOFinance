@@ -35,6 +35,7 @@ st.set_page_config(
 option_menu()
 
 st.title("$$\\large{\\textbf{COELHO Finance - UNIMARKET}}$$")
+st.caption("Author: Rafael Silva Coelho")
 
 with open("./data/periods_and_intervals.json", "r") as f:
     periods_and_intervals = json.load(f)
