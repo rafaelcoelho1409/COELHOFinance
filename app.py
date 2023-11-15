@@ -55,6 +55,22 @@ with st.expander(
     for i in range(1, 6):
         cols.image(f"assets/coelhofinance{i}.png")
 
+st.warning("""
+The information and data provided by this tool are for informational purposes only 
+and should not be construed as investment advice, recommendation, or endorsement 
+of any particular security, strategy, or investment product. This tool does not offer 
+investment advice and does not take into account the individual financial circumstances 
+or objectives of the users who access it.
+
+Investment decisions should always be based on an individual's specific financial needs, 
+objectives, goals, time horizon, and risk tolerance. The performance of a security or investment 
+strategy can vary widely, and past performance is not indicative of future results.
+
+Users of this tool are advised to perform their own independent research 
+and/or speak with a qualified investment professional before making any financial decisions. 
+The creators and maintainers of this tool are not responsible for any actions taken as a result 
+of using this tool or for any financial or other losses that may result from such actions.""")
+
 st.markdown("""<div style='text-align: center; font-size:25px'>
 COELHO Finance is a powerful financial analysis platform 
 that helps investors make informed decisions about their investments. 
