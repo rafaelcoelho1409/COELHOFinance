@@ -168,8 +168,8 @@ with st.sidebar:
     periods_and_intervals[1]["interval"][interval_filter],
     "YahooQuery")
 
-if asset_filter == "Stocks":
-    currency = ticker_yf.info["currency"]
+#if asset_filter == "Stocks":
+#    currency = ticker_yf.info["currency"]
 
 st.write("$$\\text{" + element_filter.replace("^", "").replace("&", "\\&") + "}$$")
 
@@ -274,6 +274,7 @@ with main_tabs[0]: #UNIMARKET TAB
                 st.write("$$\\textbf{" + key.capitalize() + ":} $$ " + ticker_yf.info[value])
         except:
             st.write("No informations.")
+            st.write(ticker_yf.info)
 with main_tabs[1]: #INFORMATIONS TAB
     tabs = st.tabs([
         "$$\\textbf{Summary}$$",
