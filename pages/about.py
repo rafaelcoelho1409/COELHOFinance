@@ -1,4 +1,5 @@
 import streamlit as st
+from streamlit_carousel import carousel
 from streamlit_extras.grid import grid
 from streamlit_card import card
 from functions import option_menu
@@ -18,7 +19,7 @@ with st.expander(
 ):
     st.write("$$\\underline{\\Large{\\textbf{Author}}}$$")
     grid1 = grid([1, 4], vertical_align = True)
-    grid1.image("assets/rafael_coelho_photo.jpeg")
+    grid1.image("assets/rafael_coelho_1.jpeg")
     grid1.markdown("""<div style='font-size:25px'>
     Rafael Coelho is a Brazilian Mathematics student 
     who is passionated for Data Science and Artificial Intelligence
@@ -50,4 +51,3 @@ st.markdown("""<div style='font-size:25px'>
 <b>- Advanced Statistics</b><br>
 <b>- Machine Learning predictions:</b> predictions to help you to predict if stock prices and indexes
 will go up or down""", unsafe_allow_html = True)
-

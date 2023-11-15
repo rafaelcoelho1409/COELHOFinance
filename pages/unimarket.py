@@ -175,7 +175,7 @@ st.write("$$\\text{" + element_filter.replace("^", "").replace("&", "\\&") + "}$
 
 main_tabs = st.tabs([
         "$$\\textbf{UNIMARKET}$$",
-        "$$\\textbf{INFORMATIONS}$$",
+#        "$$\\textbf{INFORMATIONS}$$",
         "$$\\textbf{INDICATORS}$$",
         "$$\\textbf{NEWS}$$",
         "$$\\textbf{FINANCIAL}$$",
@@ -183,8 +183,8 @@ main_tabs = st.tabs([
 ])
 
 with main_tabs[0]: #UNIMARKET TAB
-    grid1 = grid([5, 2], vertical_align = True)
-    with grid1.expander(
+    #grid1 = grid([5, 2], vertical_align = True)
+    with st.expander(
         label = "$$\\textbf{\\underline{UNIMARKET - " + asset_filter + "}}$$",
         expanded = True
     ):
@@ -257,339 +257,339 @@ with main_tabs[0]: #UNIMARKET TAB
                 use_container_width = True)
         except:
             st.write("No informations.")
-    with grid1.expander(
-        label = "$$\\textbf{\\underline{BASIC INFORMATIONS}}$$",
-        expanded = True
-    ):
-        try:
-            informations = {}
-            for x in ticker_yf.info.keys():
-                if (type(ticker_yf.info[x]) in [str]) and (x != "longBusinessSummary"):
-                    information = ''.join(map(
-                        lambda y: y 
-                        if y.islower() 
-                        else " " + y, x)).upper()
-                    informations[information] = x
-            for key, value in informations.items():
-                st.write("$$\\textbf{" + key.capitalize() + ":} $$ " + ticker_yf.info[value])
-        except:
-            st.write("No informations.")
-            st.write(ticker_yf.info)
-with main_tabs[1]: #INFORMATIONS TAB
-    tabs = st.tabs([
-        "$$\\textbf{Summary}$$",
-        "$$\\textbf{Company Officers}$$",
-    ])
-    with tabs[0]:
-        st.write("$$\\underline{\\huge{\\textbf{Summary}}}$$")
-        #This method below was made to avoid the company name to stay apart of the rest of the paragraph
-        try:
-            join_string = False
-            for x in ticker_yf.info["longBusinessSummary"].replace(". ", ".. ").split(". "):
-                if x == long_name:
-                    join_string = True
-                    string_to_be_joined = x
-                    continue
-                if join_string:
-                    st.markdown(f"- {string_to_be_joined} {x}")
-                    join_string = False
-                else:
-                    st.markdown(f"- {x}")
-        except:
-            st.write("No informations.")
-    with tabs[1]:
-        st.write("$$\\underline{\\huge{\\textbf{Company Officers}}}$$")
-        try:
-            st.dataframe(
-                pd.DataFrame(ticker_yf.info["companyOfficers"]).drop("maxAge", axis = 1),
-                hide_index = True,
-                use_container_width = True)
-        except:
-            st.write("No informations.")
-with main_tabs[2]: #INDICATORS TAB
+    #with grid1.expander(
+    #    label = "$$\\textbf{\\underline{BASIC INFORMATIONS}}$$",
+    #    expanded = True
+    #):
+    #    try:
+    #        informations = {}
+    #        for x in ticker_yf.info.keys():
+    #            if (type(ticker_yf.info[x]) in [str]) and (x != "longBusinessSummary"):
+    #                information = ''.join(map(
+    #                    lambda y: y 
+    #                    if y.islower() 
+    #                    else " " + y, x)).upper()
+    #                informations[information] = x
+    #        for key, value in informations.items():
+    #            st.write("$$\\textbf{" + key.capitalize() + ":} $$ " + ticker_yf.info[value])
+    #    except:
+    #        st.write("No informations.")
+    #        st.write(ticker_yf.info)
+#with main_tabs[1]: #INFORMATIONS TAB
+#    tabs = st.tabs([
+#        "$$\\textbf{Summary}$$",
+#        "$$\\textbf{Company Officers}$$",
+#    ])
+#    with tabs[0]:
+#        st.write("$$\\underline{\\huge{\\textbf{Summary}}}$$")
+#        #This method below was made to avoid the company name to stay apart of the rest of the paragraph
+#        try:
+#            join_string = False
+#            for x in ticker_yf.info["longBusinessSummary"].replace(". ", ".. ").split(". "):
+#                if x == long_name:
+#                    join_string = True
+#                    string_to_be_joined = x
+#                    continue
+#                if join_string:
+#                    st.markdown(f"- {string_to_be_joined} {x}")
+#                    join_string = False
+#                else:
+#                    st.markdown(f"- {x}")
+#        except:
+#            st.write("No informations.")
+#    with tabs[1]:
+#        st.write("$$\\underline{\\huge{\\textbf{Company Officers}}}$$")
+#        try:
+#            st.dataframe(
+#                pd.DataFrame(ticker_yf.info["companyOfficers"]).drop("maxAge", axis = 1),
+#                hide_index = True,
+#                use_container_width = True)
+#        except:
+#            st.write("No informations.")
+with main_tabs[1]: #INDICATORS TAB
     subtab_names = [
-        "$$\\textbf{Main Indicators}$$",
-        "$$\\textbf{ESG Scores}$$",
-        "$$\\textbf{Grading History}$$",
-        "$$\\textbf{Institutional Ownership}$$",
-        "$$\\textbf{Key Stats}$$",
-        "$$\\textbf{Price}$$",
-        "$$\\textbf{SEC Filings}$$",
-        "$$\\textbf{Share Purchase Activity}$$",
-        "$$\\textbf{Quotes}$$",
+        #"$$\\textbf{Main Indicators}$$",
+        #"$$\\textbf{ESG Scores}$$",
+        #"$$\\textbf{Grading History}$$",
+        #"$$\\textbf{Institutional Ownership}$$",
+        #"$$\\textbf{Key Stats}$$",
+        #"$$\\textbf{Price}$$",
+        #"$$\\textbf{SEC Filings}$$",
+        #"$$\\textbf{Share Purchase Activity}$$",
+        #"$$\\textbf{Quotes}$$",
         "$$\\textbf{Recommendations}$$"
     ]
     subtabs = st.tabs(subtab_names)
+    #with subtabs[0]:
+    #    st.write("$$\\underline{\\huge{\\textbf{Main Indicators}}}$$")
+    #    try:
+    #        indicators = {}
+    #        for x in ticker_yf.info.keys():
+    #            if type(ticker_yf.info[x]) in [int, float]:
+    #                indicator = ''.join(map(
+    #                    lambda y: y 
+    #                    if y.islower() 
+    #                    else " " + y, x)).upper()
+    #                indicators[indicator] = x
+    #        #METRIC CARDS
+    #        patterns = [
+    #            "GENERAL INDICATORS",
+    #            "RISK",
+    #            "MARKET",
+    #            "DIVIDEND",
+    #            "VOLUME",
+    #            "SHARE",
+    #            "DATE",
+    #            "EPOCH",
+    #            "DAY",
+    #            "PRICE",
+    #            "RATIO",
+    #            "AVERAGE",
+    #            "TRAILING",
+    #            "FORWARD",
+    #            "PERCENT",
+    #            "FISCAL",
+    #            "QUARTER",
+    #            "ENTERPRISE"
+    #        ]
+    #        subsubtabs = st.tabs(patterns)
+    #        with subsubtabs[0]:
+    #            general_indicator_metrics(
+    #                element,
+    #                patterns,
+    #                indicators,
+    #                ticker_yf,
+    #                5,
+    #                "info",
+    #                "YFinance"
+    #            )
+    #        for i, x in enumerate(patterns):
+    #            if i != 0: #NOT THE GENERAL TAB
+    #                with subsubtabs[i]:
+    #                    try:
+    #                        indicator_metrics(
+    #                            element,
+    #                            x, 
+    #                            indicators, 
+    #                            ticker_yf, 
+    #                            5,
+    #                            "info",
+    #                            "YFinance")
+    #                    except:
+    #                        st.write("No informations.")
+    #    except:
+    #        pass
+    #with subtabs[1]:
+    #    st.write("$$\\underline{\\huge{\\textbf{ESG Scores}}}$$")
+    #    indicators_num, indicators_str = {}, {}
+    #    try:
+    #        for x in ticker_yq.esg_scores[element].keys():
+    #            if type(ticker_yq.esg_scores[element][x]) in [int, float]:
+    #                indicator = ''.join(map(
+    #                    lambda y: y 
+    #                    if y.islower() 
+    #                    else " " + y, x)).upper()
+    #                indicators_num[indicator] = x
+    #            elif type(ticker_yq.esg_scores[element][x]) in [str]:
+    #                indicator = ''.join(map(
+    #                    lambda y: y 
+    #                    if y.islower() 
+    #                    else " " + y, x)).upper()
+    #                indicators_str[indicator] = x
+    #        #METRIC CARDS
+    #        patterns = [
+    #            "GENERAL INDICATORS",
+    #        ]
+    #        general_indicator_metrics(
+    #            element,
+    #            patterns,
+    #            indicators_num,
+    #            ticker_yq,
+    #            5,
+    #            "esg_scores",
+    #            "YahooQuery"
+    #        )
+    #    except:
+    #        st.write("No informations.")
+    #with subtabs[2]:
+    #    st.write("$$\\underline{\\huge{\\textbf{Grading History}}}$$")
+    #    try:
+    #        st.dataframe(
+    #            ticker_yq.grading_history,
+    #            hide_index = True,
+    #            use_container_width = True)
+    #    except:
+    #        st.write("No informations.")
+    #with subtabs[3]:
+    #    st.write("$$\\underline{\\huge{\\textbf{Institutional Ownership}}}$$")
+    #    try:
+    #        st.dataframe(
+    #            ticker_yq.institution_ownership.drop("maxAge", axis = 1),
+    #            hide_index = True,
+    #            use_container_width = True)
+    #    except:
+    #        st.write("No informations.")
+    #with subtabs[4]:
+    #    st.write("$$\\underline{\\huge{\\textbf{Key Stats}}}$$")
+    #    indicators_num, indicators_str = {}, {}
+    #    try:
+    #        for x in ticker_yq.key_stats[element].keys():
+    #            if type(ticker_yq.key_stats[element][x]) in [int, float]:
+    #                indicator = ''.join(map(
+    #                    lambda y: y 
+    #                    if y.islower() 
+    #                    else " " + y, x)).upper()
+    #                indicators_num[indicator] = x
+    #            elif type(ticker_yq.key_stats[element][x]) in [str]:
+    #                indicator = ''.join(map(
+    #                    lambda y: y 
+    #                    if y.islower() 
+    #                    else " " + y, x)).upper()
+    #                indicators_str[indicator] = x
+    #        #METRIC CARDS
+    #        patterns = [
+    #            "GENERAL INDICATORS",
+    #        ]
+    #        subsubtabs = st.tabs([
+    #            "MAIN INDICATORS",
+    #            "MAIN INFORMATIONS"
+    #        ])
+    #        with subsubtabs[0]:
+    #            general_indicator_metrics(
+    #                element,
+    #                patterns,
+    #                indicators_num,
+    #                ticker_yq,
+    #                5,
+    #                "key_stats",
+    #                "YahooQuery"
+    #            )
+    #        with subsubtabs[1]:
+    #            general_indicator_metrics(
+    #                element,
+    #                patterns,
+    #                indicators_str,
+    #                ticker_yq,
+    #                5,
+    #                "key_stats",
+    #                "YahooQuery"
+    #            )
+    #    except:
+    #        st.write("No informations.")
+    #with subtabs[5]:
+    #    st.write("$$\\underline{\\huge{\\textbf{Price}}}$$")
+    #    indicators_num, indicators_str = {}, {}
+    #    try:
+    #        for x in ticker_yq.price[element].keys():
+    #            if type(ticker_yq.price[element][x]) in [int, float]:
+    #                indicator = ''.join(map(
+    #                    lambda y: y 
+    #                    if y.islower() 
+    #                    else " " + y, x)).upper()
+    #                indicators_num[indicator] = x
+    #            elif type(ticker_yq.price[element][x]) in [str]:
+    #                indicator = ''.join(map(
+    #                    lambda y: y 
+    #                    if y.islower() 
+    #                    else " " + y, x)).upper()
+    #                indicators_str[indicator] = x
+    #    except:
+    #        pass
+    #    #METRIC CARDS
+    #    patterns = [
+    #        "GENERAL INDICATORS",
+    #    ]
+    #    subsubtabs = st.tabs([
+    #        "Main Indicators",
+    #        "Main Informations"
+    #    ])
+    #    with subsubtabs[0]:
+    #        general_indicator_metrics(
+    #            element,
+    #            patterns,
+    #            indicators_num,
+    #            ticker_yq,
+    #            5,
+    #            "price",
+    #            "YahooQuery"
+    #        )
+    #    with subsubtabs[1]:
+    #        informations = {}
+    #        try:
+    #            for x in ticker_yq.price[element].keys():
+    #                information = ''.join(map(
+    #                    lambda y: str(y) 
+    #                    if str(y).islower() 
+    #                    else " " + str(y), str(x))).upper()
+    #                if type(ticker_yq.price[element][x]) in [str]:
+    #                    informations[information] = x
+    #            info = {}, {}
+    #            items_per_col = len(informations) // 2 
+    #            for i, (key, value) in enumerate(informations.items()):
+    #                try:
+    #                    info[(i // items_per_col)][key] = value
+    #                except:
+    #                    pass
+    #            subcols = st.columns(2)
+    #            for i in range(len(subcols)):
+    #                with subcols[i]:
+    #                    for key, value in info[i].items():
+    #                        info_latex = "$$\\textbf{" + key.capitalize() + ":}$$  " + ticker_yq.price[element][value] + "\n"
+    #                        st.write(info_latex)
+    #        except:
+    #            st.write("No informations.")
+    #with subtabs[6]:
+    #    st.write("$$\\underline{\\huge{\\textbf{SEC Filings}}}$$")
+    #    try:
+    #        sec_filings = ticker_yq.sec_filings.reset_index()
+    #        sec_filings_exhibits = pd.json_normalize(sec_filings["exhibits"])
+    #        sec_filings_final = pd.concat([
+    #            sec_filings.drop("exhibits", axis = 1),
+    #            sec_filings_exhibits
+    #        ], axis = 1)
+    #        st.dataframe(
+    #            sec_filings_final.drop([
+    #                "maxAge",
+    #                "symbol",
+    #                "row"], axis = 1).reset_index(drop = True),
+    #            hide_index = True,
+    #            use_container_width = True
+    #        )
+    #    except:
+    #        st.write("No informations.")
+    #with subtabs[7]:
+    #    st.write("$$\\underline{\\huge{\\textbf{Share Purchase Activity}}}$$")
+    #    indicators = {}
+    #    try:
+    #        for x in ticker_yq.share_purchase_activity[element].keys():
+    #            if type(ticker_yq.share_purchase_activity[element][x]) in [int, float, str]:
+    #                indicator = ''.join(map(
+    #                    lambda y: y 
+    #                    if y.islower() 
+    #                    else " " + y, x)).upper()
+    #                indicators[indicator] = x
+    #        #METRIC CARDS
+    #        patterns = [
+    #            "GENERAL INDICATORS",
+    #        ]
+    #        general_indicator_metrics(
+    #            element,
+    #            patterns,
+    #            indicators,
+    #            ticker_yq,
+    #            5,
+    #            "share_purchase_activity",
+    #            "YahooQuery"
+    #        )
+    #    except:
+    #        st.write("No informations.")
+    #with subtabs[8]:
+    #    st.write("$$\\underline{\\huge{\\textbf{Quotes}}}$$")
+    #    try:
+    #        st.write(ticker_yq.quotes)
+    #    except:
+    #        st.write("No informations.")
     with subtabs[0]:
-        st.write("$$\\underline{\\huge{\\textbf{Main Indicators}}}$$")
-        try:
-            indicators = {}
-            for x in ticker_yf.info.keys():
-                if type(ticker_yf.info[x]) in [int, float]:
-                    indicator = ''.join(map(
-                        lambda y: y 
-                        if y.islower() 
-                        else " " + y, x)).upper()
-                    indicators[indicator] = x
-            #METRIC CARDS
-            patterns = [
-                "GENERAL INDICATORS",
-                "RISK",
-                "MARKET",
-                "DIVIDEND",
-                "VOLUME",
-                "SHARE",
-                "DATE",
-                "EPOCH",
-                "DAY",
-                "PRICE",
-                "RATIO",
-                "AVERAGE",
-                "TRAILING",
-                "FORWARD",
-                "PERCENT",
-                "FISCAL",
-                "QUARTER",
-                "ENTERPRISE"
-            ]
-            subsubtabs = st.tabs(patterns)
-            with subsubtabs[0]:
-                general_indicator_metrics(
-                    element,
-                    patterns,
-                    indicators,
-                    ticker_yf,
-                    5,
-                    "info",
-                    "YFinance"
-                )
-            for i, x in enumerate(patterns):
-                if i != 0: #NOT THE GENERAL TAB
-                    with subsubtabs[i]:
-                        try:
-                            indicator_metrics(
-                                element,
-                                x, 
-                                indicators, 
-                                ticker_yf, 
-                                5,
-                                "info",
-                                "YFinance")
-                        except:
-                            st.write("No informations.")
-        except:
-            pass
-    with subtabs[1]:
-        st.write("$$\\underline{\\huge{\\textbf{ESG Scores}}}$$")
-        indicators_num, indicators_str = {}, {}
-        try:
-            for x in ticker_yq.esg_scores[element].keys():
-                if type(ticker_yq.esg_scores[element][x]) in [int, float]:
-                    indicator = ''.join(map(
-                        lambda y: y 
-                        if y.islower() 
-                        else " " + y, x)).upper()
-                    indicators_num[indicator] = x
-                elif type(ticker_yq.esg_scores[element][x]) in [str]:
-                    indicator = ''.join(map(
-                        lambda y: y 
-                        if y.islower() 
-                        else " " + y, x)).upper()
-                    indicators_str[indicator] = x
-            #METRIC CARDS
-            patterns = [
-                "GENERAL INDICATORS",
-            ]
-            general_indicator_metrics(
-                element,
-                patterns,
-                indicators_num,
-                ticker_yq,
-                5,
-                "esg_scores",
-                "YahooQuery"
-            )
-        except:
-            st.write("No informations.")
-    with subtabs[2]:
-        st.write("$$\\underline{\\huge{\\textbf{Grading History}}}$$")
-        try:
-            st.dataframe(
-                ticker_yq.grading_history,
-                hide_index = True,
-                use_container_width = True)
-        except:
-            st.write("No informations.")
-    with subtabs[3]:
-        st.write("$$\\underline{\\huge{\\textbf{Institutional Ownership}}}$$")
-        try:
-            st.dataframe(
-                ticker_yq.institution_ownership.drop("maxAge", axis = 1),
-                hide_index = True,
-                use_container_width = True)
-        except:
-            st.write("No informations.")
-    with subtabs[4]:
-        st.write("$$\\underline{\\huge{\\textbf{Key Stats}}}$$")
-        indicators_num, indicators_str = {}, {}
-        try:
-            for x in ticker_yq.key_stats[element].keys():
-                if type(ticker_yq.key_stats[element][x]) in [int, float]:
-                    indicator = ''.join(map(
-                        lambda y: y 
-                        if y.islower() 
-                        else " " + y, x)).upper()
-                    indicators_num[indicator] = x
-                elif type(ticker_yq.key_stats[element][x]) in [str]:
-                    indicator = ''.join(map(
-                        lambda y: y 
-                        if y.islower() 
-                        else " " + y, x)).upper()
-                    indicators_str[indicator] = x
-            #METRIC CARDS
-            patterns = [
-                "GENERAL INDICATORS",
-            ]
-            subsubtabs = st.tabs([
-                "MAIN INDICATORS",
-                "MAIN INFORMATIONS"
-            ])
-            with subsubtabs[0]:
-                general_indicator_metrics(
-                    element,
-                    patterns,
-                    indicators_num,
-                    ticker_yq,
-                    5,
-                    "key_stats",
-                    "YahooQuery"
-                )
-            with subsubtabs[1]:
-                general_indicator_metrics(
-                    element,
-                    patterns,
-                    indicators_str,
-                    ticker_yq,
-                    5,
-                    "key_stats",
-                    "YahooQuery"
-                )
-        except:
-            st.write("No informations.")
-    with subtabs[5]:
-        st.write("$$\\underline{\\huge{\\textbf{Price}}}$$")
-        indicators_num, indicators_str = {}, {}
-        try:
-            for x in ticker_yq.price[element].keys():
-                if type(ticker_yq.price[element][x]) in [int, float]:
-                    indicator = ''.join(map(
-                        lambda y: y 
-                        if y.islower() 
-                        else " " + y, x)).upper()
-                    indicators_num[indicator] = x
-                elif type(ticker_yq.price[element][x]) in [str]:
-                    indicator = ''.join(map(
-                        lambda y: y 
-                        if y.islower() 
-                        else " " + y, x)).upper()
-                    indicators_str[indicator] = x
-        except:
-            pass
-        #METRIC CARDS
-        patterns = [
-            "GENERAL INDICATORS",
-        ]
-        subsubtabs = st.tabs([
-            "Main Indicators",
-            "Main Informations"
-        ])
-        with subsubtabs[0]:
-            general_indicator_metrics(
-                element,
-                patterns,
-                indicators_num,
-                ticker_yq,
-                5,
-                "price",
-                "YahooQuery"
-            )
-        with subsubtabs[1]:
-            informations = {}
-            try:
-                for x in ticker_yq.price[element].keys():
-                    information = ''.join(map(
-                        lambda y: str(y) 
-                        if str(y).islower() 
-                        else " " + str(y), str(x))).upper()
-                    if type(ticker_yq.price[element][x]) in [str]:
-                        informations[information] = x
-                info = {}, {}
-                items_per_col = len(informations) // 2 
-                for i, (key, value) in enumerate(informations.items()):
-                    try:
-                        info[(i // items_per_col)][key] = value
-                    except:
-                        pass
-                subcols = st.columns(2)
-                for i in range(len(subcols)):
-                    with subcols[i]:
-                        for key, value in info[i].items():
-                            info_latex = "$$\\textbf{" + key.capitalize() + ":}$$  " + ticker_yq.price[element][value] + "\n"
-                            st.write(info_latex)
-            except:
-                st.write("No informations.")
-    with subtabs[6]:
-        st.write("$$\\underline{\\huge{\\textbf{SEC Filings}}}$$")
-        try:
-            sec_filings = ticker_yq.sec_filings.reset_index()
-            sec_filings_exhibits = pd.json_normalize(sec_filings["exhibits"])
-            sec_filings_final = pd.concat([
-                sec_filings.drop("exhibits", axis = 1),
-                sec_filings_exhibits
-            ], axis = 1)
-            st.dataframe(
-                sec_filings_final.drop([
-                    "maxAge",
-                    "symbol",
-                    "row"], axis = 1).reset_index(drop = True),
-                hide_index = True,
-                use_container_width = True
-            )
-        except:
-            st.write("No informations.")
-    with subtabs[7]:
-        st.write("$$\\underline{\\huge{\\textbf{Share Purchase Activity}}}$$")
-        indicators = {}
-        try:
-            for x in ticker_yq.share_purchase_activity[element].keys():
-                if type(ticker_yq.share_purchase_activity[element][x]) in [int, float, str]:
-                    indicator = ''.join(map(
-                        lambda y: y 
-                        if y.islower() 
-                        else " " + y, x)).upper()
-                    indicators[indicator] = x
-            #METRIC CARDS
-            patterns = [
-                "GENERAL INDICATORS",
-            ]
-            general_indicator_metrics(
-                element,
-                patterns,
-                indicators,
-                ticker_yq,
-                5,
-                "share_purchase_activity",
-                "YahooQuery"
-            )
-        except:
-            st.write("No informations.")
-    with subtabs[8]:
-        st.write("$$\\underline{\\huge{\\textbf{Quotes}}}$$")
-        try:
-            st.write(ticker_yq.quotes)
-        except:
-            st.write("No informations.")
-    with subtabs[9]:
         st.write("$$\\underline{\\huge{\\textbf{Recommendations (Score)}}}$$")
         try:
             recommended_symbols = pd.DataFrame(ticker_yq.recommendations[element]["recommendedSymbols"])
@@ -604,13 +604,13 @@ with main_tabs[2]: #INDICATORS TAB
                 )
         except:
             st.write("No informations.")
-with main_tabs[3]: #NEWS TAB
+with main_tabs[2]: #NEWS TAB
     st.write("$$\\underline{\\huge{\\textbf{Latest News}}}$$")
     try:
         get_news(ticker_yf.news)
     except:
         st.write("No informations.")
-with main_tabs[4]: #FINANCIAL TAB
+with main_tabs[3]: #FINANCIAL TAB
     subtab_names = [
         "$$\\textbf{Financials}$$",
         "$$\\textbf{Income Statement}$$",
@@ -1092,7 +1092,7 @@ with main_tabs[4]: #FINANCIAL TAB
                 )
             except:
                 st.write("No informations.")
-with main_tabs[5]: #TECHNICAL INSIGHTS TAB
+with main_tabs[4]: #TECHNICAL INSIGHTS TAB
     tab_names = [
         "$$\\textbf{Instrument Info}$$",
         "$$\\textbf{Company Snapshot}$$",
