@@ -47,6 +47,14 @@ with st.expander(
     if MULTIMARKET:
         switch_page("MULTIMARKET")  
 
+with st.expander(
+    label = "COELHO Finance",
+    expanded = True
+):
+    cols = grid(5)
+    for i in range(1, 6):
+        cols.image(f"assets/coelhofinance{i}.png")
+
 st.markdown("""<div style='text-align: center; font-size:25px'>
 COELHO Finance is a powerful financial analysis platform 
 that helps investors make informed decisions about their investments. 
@@ -61,6 +69,11 @@ with st.expander(
         comprehensive analysis of individual stocks and indexes from 40+ countries, including 
         financial statements, price charts, analyst ratings and several business indicators about each stock price. 
         This information can help you identify undervalued stocks with the potential for growth.<br><br>""", unsafe_allow_html = True)
+    st.markdown("""<div style='font-size:25px'>
+        <b>- Get statistical informations</b><br>
+        With UNISTATS tool, COELHO Finance brings to you 
+        statistical models as outlier detections, moving averages, forecast models,
+        anomaly detection, volatility models and Monte Carlo simulations.<br><br>""", unsafe_allow_html = True)
     st.markdown("""<div style='font-size:25px'>
         <b>- Compare stocks</b><br>
         With MULTIMARKET tool, COELHO Finance allows you to compare 
