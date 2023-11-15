@@ -1,5 +1,4 @@
 import streamlit as st
-from streamlit_carousel import carousel
 from streamlit_extras.grid import grid
 from streamlit_card import card
 from functions import option_menu
