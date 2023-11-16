@@ -25,7 +25,7 @@ with st.expander(
     and works in both areas for over three years, with solid knowledge in
     technologic areas such as Machine Learning, Deep Learning, Data Science,
     Computer Vision, Reinforcement Learning, NLP and others.<br>
-    Actually, he works in one of the Big Four companies for over a year.</div>
+    Recently, he worked in one of the Big Four companies for over a year.</div>
     <div>
     <h1>
     <a 
