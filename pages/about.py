@@ -2,6 +2,7 @@ import streamlit as st
 from streamlit_extras.grid import grid
 from streamlit_card import card
 from functions import option_menu
+from streamlit_extras.switch_page_button import switch_page
 
 st.set_page_config(
     page_title = "COELHO Finance - About Us",
@@ -10,7 +11,30 @@ st.set_page_config(
 
 option_menu()
 
-st.title("About Us")
+st.title("$$\\large{\\textbf{About Us}}$$")
+
+grid_ = grid(4, vertical_align = True)
+UNIMARKET = grid_.button(
+    label = "$$\\textbf{UNIMARKET}$$",
+    use_container_width = True)
+UNISTATS = grid_.button(
+    label = "$$\\textbf{UNISTATS}$$",
+    use_container_width = True)
+MULTIMARKET = grid_.button(
+    "$$\\textbf{MULTIMARKET}$$",
+    use_container_width = True)
+ABOUT_US = grid_.button(
+    "$$\\textbf{About Us}$$",
+    use_container_width = True)
+if UNIMARKET:
+    switch_page("UNIMARKET")
+if UNISTATS:
+    switch_page("UNISTATS")
+if MULTIMARKET:
+    switch_page("MULTIMARKET")  
+if ABOUT_US:
+    switch_page("About Us")
+st.divider()
 
 with st.expander(
     label = "Author",

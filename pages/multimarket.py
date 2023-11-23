@@ -7,6 +7,7 @@ import plotly.graph_objects as go
 import plotly.express as px
 import quantstats as qs
 from plotly.subplots import make_subplots
+from streamlit_extras.switch_page_button import switch_page
 #MODELS
 from arch import arch_model
 #STREAMLIT THIRD-PARTY
@@ -38,6 +39,29 @@ option_menu()
 
 st.title("$$\\large{\\textbf{COELHO Finance - MULTIMARKET}}$$")
 st.caption("Author: Rafael Silva Coelho")
+
+grid_ = grid(4, vertical_align = True)
+UNIMARKET = grid_.button(
+    label = "$$\\textbf{UNIMARKET}$$",
+    use_container_width = True)
+UNISTATS = grid_.button(
+    label = "$$\\textbf{UNISTATS}$$",
+    use_container_width = True)
+MULTIMARKET = grid_.button(
+    "$$\\textbf{MULTIMARKET}$$",
+    use_container_width = True)
+ABOUT_US = grid_.button(
+    "$$\\textbf{About Us}$$",
+    use_container_width = True)
+if UNIMARKET:
+    switch_page("UNIMARKET")
+if UNISTATS:
+    switch_page("UNISTATS")
+if MULTIMARKET:
+    switch_page("MULTIMARKET")  
+if ABOUT_US:
+    switch_page("About Us")
+st.divider()
 
 with open("./data/periods_and_intervals.json", "r") as f:
     periods_and_intervals = json.load(f)

@@ -4,6 +4,7 @@ import datetime as dt
 import pandas as pd
 import plotly.graph_objects as go
 import plotly.express as px
+from streamlit_extras.switch_page_button import switch_page
 #STREAMLIT THIRD-PARTY
 from streamlit_extras.grid import grid
 from streamlit_extras.metric_cards import style_metric_cards
@@ -36,6 +37,29 @@ option_menu()
 
 st.title("$$\\large{\\textbf{COELHO Finance - UNIMARKET}}$$")
 st.caption("Author: Rafael Silva Coelho")
+
+grid_ = grid(4, vertical_align = True)
+UNIMARKET = grid_.button(
+    label = "$$\\textbf{UNIMARKET}$$",
+    use_container_width = True)
+UNISTATS = grid_.button(
+    label = "$$\\textbf{UNISTATS}$$",
+    use_container_width = True)
+MULTIMARKET = grid_.button(
+    "$$\\textbf{MULTIMARKET}$$",
+    use_container_width = True)
+ABOUT_US = grid_.button(
+    "$$\\textbf{About Us}$$",
+    use_container_width = True)
+if UNIMARKET:
+    switch_page("UNIMARKET")
+if UNISTATS:
+    switch_page("UNISTATS")
+if MULTIMARKET:
+    switch_page("MULTIMARKET")  
+if ABOUT_US:
+    switch_page("About Us")
+st.divider()
 
 with open("./data/periods_and_intervals.json", "r") as f:
     periods_and_intervals = json.load(f)
