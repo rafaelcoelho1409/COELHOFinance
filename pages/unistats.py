@@ -52,7 +52,7 @@ from functions import (
     commodities_filter_func,
     simulate_gbm)
 
-PAGE_TITLE = "COELHO Finance - UNISTATS"
+PAGE_TITLE = "COELHO Finance | UNISTATS"
 st.set_page_config(
     page_title = PAGE_TITLE,
     layout = "wide"
@@ -60,7 +60,7 @@ st.set_page_config(
 
 option_menu()
 
-st.title("$$\\large{\\textbf{COELHO Finance - UNISTATS}}$$")
+st.title("$$\\large{\\textbf{COELHO Finance | UNISTATS}}$$")
 st.caption("Author: Rafael Silva Coelho")
 
 grid_ = grid(4, vertical_align = True)

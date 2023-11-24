@@ -31,13 +31,13 @@ from functions import (
     conditional_correlation_matrix)
 
 st.set_page_config(
-    page_title = "COELHO Finance - MULTIMARKET",
+    page_title = "COELHO Finance | MULTIMARKET",
     layout = "wide"
 )
 
 option_menu()
 
-st.title("$$\\large{\\textbf{COELHO Finance - MULTIMARKET}}$$")
+st.title("$$\\large{\\textbf{COELHO Finance | MULTIMARKET}}$$")
 st.caption("Author: Rafael Silva Coelho")
 
 grid_ = grid(4, vertical_align = True)

@@ -8,6 +8,7 @@ import investpy
 import numpy as np
 import cvxpy as cp
 import plotly.express as px
+import base64
 #ANOMALY DETECTION
 from adtk.data import validate_series
 from streamlit_extras.row import row
@@ -1482,3 +1483,14 @@ def conditional_correlation_matrix(returns, element_filter):
         aspect = "auto",
         color_continuous_scale = "RdBu_r")
     return fig
+
+def image_border_radius(image_path, border_radius, page_object = None):
+    with open(image_path, "rb") as img_file:
+        img_base64 = base64.b64encode(img_file.read()).decode()
+    # Create HTML string with the image
+    img_html = f'<img src="data:image/jpeg;base64,{img_base64}" style="border-radius: {border_radius}px; width: 300px;">'
+    # Display the HTML string in Streamlit
+    if page_object == None:
+        st.markdown(img_html, unsafe_allow_html=True)
+    else:
+        page_object.markdown(img_html, unsafe_allow_html=True)

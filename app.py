@@ -2,7 +2,7 @@ import streamlit as st
 from streamlit_extras.switch_page_button import switch_page
 from st_pages import show_pages, Page, Section, add_indentation
 from streamlit_extras.grid import grid
-from functions import option_menu
+from functions import option_menu, image_border_radius
 
 st.set_page_config(
     page_title = "COELHO Finance",
@@ -11,14 +11,16 @@ st.set_page_config(
 
 option_menu()
 
-grid1 = grid([1, 5], vertical_align = True)
-grid1.image(
-    "assets/coelho_finance_logo.png",
-)
-grid1.markdown(
-    """<h2 style='text-align: center'>A new powerful tool to help 
+grid1 = grid(3, vertical_align = True)
+grid1.container()
+image_border_radius("assets/coelho_finance_logo.png", 20, grid1)
+#grid1.image(
+#    "assets/coelho_finance_logo.png",
+#)
+st.markdown(
+    """<h1 style='text-align: center'>A new powerful tool to help 
     you make informed investment decisions, track your investments 
-    and identify opportunities.</h2><br>""",
+    and identify opportunities.</h1><br>""",
     unsafe_allow_html = True
 )
 
@@ -79,19 +81,19 @@ With COELHO Finance, you can:<br><br></div>""", unsafe_allow_html = True)
 with st.expander(
     label = "About tools",
     expanded = True):
+    st.write("$$\\underline{\\large{\\textbf{- Analyze individual stocks}}}$$")
     st.markdown("""<div style='font-size:25px'>
-        <b>- Analyze individual stocks</b><br>
         With UNIMARKET tool, COELHO Finance provides 
         comprehensive analysis of individual stocks and indexes from 40+ countries, including 
         financial statements, price charts, analyst ratings and several business indicators about each stock price. 
         This information can help you identify undervalued stocks with the potential for growth.<br><br>""", unsafe_allow_html = True)
+    st.write("$$\\underline{\\large{\\textbf{- Get statistical informations}}}$$")
     st.markdown("""<div style='font-size:25px'>
-        <b>- Get statistical informations</b><br>
         With UNISTATS tool, COELHO Finance brings to you 
         statistical models as outlier detections, moving averages, forecast models,
         anomaly detection, volatility models and Monte Carlo simulations.<br><br>""", unsafe_allow_html = True)
+    st.write("$$\\underline{\\large{\\textbf{- Compare stocks}}}$$")
     st.markdown("""<div style='font-size:25px'>
-        <b>- Compare stocks</b><br>
         With MULTIMARKET tool, COELHO Finance allows you to compare 
         the performance of two or more stocks or indexes, so you can see 
         which stocks or indexes are outperforming the market. These informations 

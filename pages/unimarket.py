@@ -27,7 +27,7 @@ from functions import (
     commodities_filter_func,
     split_key_name)
 
-PAGE_TITLE = "COELHO Finance - UNIMARKET"
+PAGE_TITLE = "COELHO Finance | UNIMARKET"
 st.set_page_config(
     page_title = PAGE_TITLE,
     layout = "wide"
@@ -35,7 +35,7 @@ st.set_page_config(
 
 option_menu()
 
-st.title("$$\\large{\\textbf{COELHO Finance - UNIMARKET}}$$")
+st.title("$$\\large{\\textbf{COELHO Finance | UNIMARKET}}$$")
 st.caption("Author: Rafael Silva Coelho")
 
 grid_ = grid(4, vertical_align = True)
