@@ -194,7 +194,7 @@ def get_sec_reports(sec_reports):
 def option_menu():
     show_pages([
         Page("app.py", "COELHO Finance"),
-        Section("Market Analytics"),
+        Section("Financial Market Analytics"),
         Page("pages/unimarket.py", "UNIMARKET"),
         Page("pages/unistats.py", "UNISTATS"),
         Page("pages/multimarket.py", "MULTIMARKET"),
