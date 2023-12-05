@@ -25,7 +25,8 @@ from functions import (
     cryptos_filter_func,
     bonds_filter_func,
     commodities_filter_func,
-    split_key_name)
+    split_key_name,
+    image_border_radius)
 
 PAGE_TITLE = "COELHO Finance | UNIMARKET"
 st.set_page_config(
@@ -36,8 +37,10 @@ st.set_page_config(
 
 option_menu()
 
-st.title("$$\\large{\\textbf{COELHO Finance | UNIMARKET}}$$")
-st.caption("Author: Rafael Silva Coelho")
+grid_title = grid([5, 1], vertical_align = True)
+container1 = grid_title.container()
+container1.title("$$\\large{\\textbf{COELHO Finance | UNIMARKET}}$$")
+container1.caption("Author: Rafael Silva Coelho")
 
 grid_ = grid(5, vertical_align = True)
 HOME = grid_.button(

@@ -38,8 +38,10 @@ st.set_page_config(
 
 option_menu()
 
-st.title("$$\\large{\\textbf{COELHO Finance | MULTIMARKET}}$$")
-st.caption("Author: Rafael Silva Coelho")
+grid_title = grid([5, 1], vertical_align = True)
+container1 = grid_title.container()
+container1.title("$$\\large{\\textbf{COELHO Finance | MULTIMARKET}}$$")
+container1.caption("Author: Rafael Silva Coelho")
 
 grid_ = grid(5, vertical_align = True)
 HOME = grid_.button(
