@@ -28,7 +28,8 @@ from functions import (
     commodities_filter_func2,
     efficient_frontier,
     efficient_frontier2,
-    conditional_correlation_matrix)
+    conditional_correlation_matrix,
+    image_border_radius)
 
 st.set_page_config(
     page_title = "COELHO Finance | MULTIMARKET",
@@ -42,6 +43,7 @@ grid_title = grid([5, 1], vertical_align = True)
 container1 = grid_title.container()
 container1.title("$$\\large{\\textbf{COELHO Finance | MULTIMARKET}}$$")
 container1.caption("Author: Rafael Silva Coelho")
+image_border_radius("./assets/coelho_finance_logo.png", 15, 60, 60, grid_title)
 
 grid_ = grid(5, vertical_align = True)
 HOME = grid_.button(

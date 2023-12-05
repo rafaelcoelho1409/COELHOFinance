@@ -50,7 +50,8 @@ from functions import (
     cryptos_filter_func,
     bonds_filter_func,
     commodities_filter_func,
-    simulate_gbm)
+    simulate_gbm,
+    image_border_radius)
 
 PAGE_TITLE = "COELHO Finance | UNISTATS"
 st.set_page_config(
@@ -65,6 +66,7 @@ grid_title = grid([5, 1], vertical_align = True)
 container1 = grid_title.container()
 container1.title("$$\\large{\\textbf{COELHO Finance | UNISTATS}}$$")
 container1.caption("Author: Rafael Silva Coelho")
+image_border_radius("./assets/coelho_finance_logo.png", 15, 60, 60, grid_title)
 
 grid_ = grid(5, vertical_align = True)
 HOME = grid_.button(
