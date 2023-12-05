@@ -43,7 +43,7 @@ if MULTIMARKET:
 if ABOUT_US:
     switch_page("About Us")
 
-first_column.warning("""
+first_column.info("""
 This tool provides information for general purposes and should not be taken as investment advice. 
 It doesn't account for individual financial circumstances or goals. 
 \nUsers should make investment decisions based on their own financial needs and risk tolerance, 
@@ -106,7 +106,10 @@ with st.expander(
     label = "COELHO Finance",
     expanded = True
 ):
-    cols = grid(5)
+    cols1 = grid(5)
+    cols2 = grid(5)
     for i in range(1, 6):
-        cols.image(f"assets/coelhofinance{i}.png")
+        cols1.image(f"assets/coelhofinance{i:0>2}.png")
+    for i in range(6, 11):
+        cols2.image(f"assets/coelhofinance{i:0>2}.png")
 st.divider()
