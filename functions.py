@@ -1499,12 +1499,12 @@ def conditional_correlation_matrix(returns, element_filter):
         color_continuous_scale = "RdBu_r")
     return fig
 
-def image_border_radius(image_path, border_radius, page_object = None, is_html = False):
+def image_border_radius(image_path, border_radius, width, height, page_object = None, is_html = False):
     if is_html == False:
         with open(image_path, "rb") as img_file:
             img_base64 = base64.b64encode(img_file.read()).decode()
         # Create HTML string with the image
-        img_html = f'<img src="data:image/jpeg;base64,{img_base64}" style="border-radius: {border_radius}px; width: 100%; height: 100%">'
+        img_html = f'<img src="data:image/jpeg;base64,{img_base64}" style="border-radius: {border_radius}px; width: {width}%; height: {height}%">'
         # Display the HTML string in Streamlit
         if page_object == None:
             st.markdown(img_html, unsafe_allow_html=True)

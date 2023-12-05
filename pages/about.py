@@ -47,16 +47,16 @@ with st.expander(
     expanded = True
 ):
     st.write("$$\\underline{\\Large{\\textbf{Author}}}$$")
-    grid1 = grid([1, 0.2, 2], vertical_align = True)
-    image_border_radius("assets/rafael_coelho_1.jpeg", 20, grid1)
+    grid1 = grid([1, 0.1, 4], vertical_align = True)
+    image_border_radius("assets/rafael_coelho_1.jpeg", 20, 80, 80, grid1)
     grid1.container()
     container1 = grid1.container()
-    container1.markdown("""<div style='font-size:25px; text-align: center'>
+    container1.markdown("""<div style='font-size:25px'>
     Rafael Coelho is a Brazilian Mathematics student 
     who is passionated for Data Science and Artificial Intelligence
     and works in both areas for over three years, with solid knowledge in
     technologic areas such as Machine Learning, Deep Learning, Data Science,
-    Computer Vision, Reinforcement Learning, NLP and others.<br>
+    Computer Vision, Reinforcement Learning, NLP and others.<br><br>
     Recently, he worked in one of the Big Four companies for over a year.</div>
     """, unsafe_allow_html = True)
     #test = container1.columns(3)

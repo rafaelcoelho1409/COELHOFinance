@@ -19,7 +19,7 @@ layout = grid([1, 0.2, 2], vertical_align = True)
 first_column = layout.container()
 layout.container()
 second_column = layout.container()
-image_border_radius("assets/coelho_finance_logo.png", 20, first_column)
+image_border_radius("assets/coelho_finance_logo.png", 20, 100, 100, first_column)
 first_column.caption("Author: Rafael Silva Coelho")
 
 UNIMARKET = first_column.button(
