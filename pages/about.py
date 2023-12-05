@@ -47,8 +47,9 @@ with st.expander(
     expanded = True
 ):
     st.write("$$\\underline{\\Large{\\textbf{Author}}}$$")
-    grid1 = grid([1, 2], vertical_align = True)
+    grid1 = grid([1, 0.2, 2], vertical_align = True)
     image_border_radius("assets/rafael_coelho_1.jpeg", 20, grid1)
+    grid1.container()
     container1 = grid1.container()
     container1.markdown("""<div style='font-size:25px; text-align: center'>
     Rafael Coelho is a Brazilian Mathematics student 
