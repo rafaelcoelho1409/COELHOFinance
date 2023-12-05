@@ -213,8 +213,9 @@ def split_key_name(string):
 
 def stocks_filter_func(
     periods_and_intervals, 
-    page_title):
-    with st.form("market_form"):
+    page_title,
+    filter_bar):
+    with filter_bar.form("market_form"):
         market_filter = st.selectbox(
             label = "Market",
             placeholder = "Market",
@@ -230,7 +231,7 @@ def stocks_filter_func(
         )
         if market_button:
             market_filter = st.session_state["market_filter"]
-    with st.form("search_form"):
+    with filter_bar.form("search_form"):
         market_data_yf = pd.json_normalize(
                 json.load(open(f"./data/symbols/{market_filter.lower()}.json", "r")))\
                     .sort_values(by = "symbol")\
@@ -241,7 +242,6 @@ def stocks_filter_func(
             placeholder = "Stock",
             options = sorted(market_data_yf["options"][
                 market_data_yf["options"].notnull()]),
-            index = 15,
             key = "stock_filter"
         )
         element = market_data_yf[market_data_yf["options"] == element_filter]["symbol"].iloc[0]
@@ -289,12 +289,13 @@ def stocks_filter_func(
     
 def indices_filter_func(
     periods_and_intervals,
-    page_title):
+    page_title,
+    filter_bar):
     index_data = investpy.indices.get_indices()
     index_data["options"] = index_data["symbol"] + " - " + index_data["name"]
     index_data["country"] = index_data["country"].str.upper()
     index_data["symbol_yf"] = "^" + index_data["symbol"]
-    with st.expander(
+    with filter_bar.expander(
         label = "Market",
         expanded = True
     ):
@@ -303,7 +304,6 @@ def indices_filter_func(
                 label = "Market",
                 placeholder = "Market",
                 options = sorted(index_data["country"].unique()),
-                index = 91,
                 key = "market_filter"
             )
             market_button = st.form_submit_button(
@@ -319,7 +319,6 @@ def indices_filter_func(
                 label = f"Index ({market_filter})",
                 placeholder = "Index",
                 options = sorted(index_options),
-                index = 1059,
                 key = "index_filter"
             )
             index = index_data[index_data["options"] == index_filter]["symbol_yf"].tolist()[0]
@@ -365,10 +364,11 @@ def indices_filter_func(
 
 def bonds_filter_func(
     periods_and_intervals,
-    page_title):
+    page_title,
+    filter_bar):
     bond_data = pd.read_json("./data/bonds.json")
     bond_data["options"] = bond_data["Symbol"] + " - " + bond_data["Name"]
-    with st.expander(
+    with filter_bar.expander(
         label = "Market",
         expanded = True
     ):
@@ -418,10 +418,11 @@ def bonds_filter_func(
 
 def commodities_filter_func(
     periods_and_intervals,
-    page_title):
+    page_title,
+    filter_bar):
     commodity_data = pd.read_json("./data/commodities.json")
     commodity_data["options"] = commodity_data["Symbol"] + " - " + commodity_data["Name"]
-    with st.expander(
+    with filter_bar.expander(
         label = "Market",
         expanded = True
     ):
@@ -471,11 +472,12 @@ def commodities_filter_func(
 
 def funds_filter_func(
     periods_and_intervals,
-    page_title):
+    page_title,
+    filter_bar):
     funds_data = investpy.funds.get_funds()
     funds_data["options"] = funds_data["symbol"] + " - " + funds_data["name"]
     funds_data["country"] = funds_data["country"].str.upper()
-    with st.expander(
+    with filter_bar.expander(
         label = "Market",
         expanded = True
     ):
@@ -484,7 +486,6 @@ def funds_filter_func(
                 label = "Market",
                 placeholder = "Market",
                 options = sorted(funds_data["country"].unique()),
-                index = 58,
                 key = "market_filter"
             )
             market_button = st.form_submit_button(
@@ -500,7 +501,6 @@ def funds_filter_func(
                 label = f"Fund ({market_filter})",
                 placeholder = "Fund",
                 options = sorted(funds_options),
-                index = 12215,
                 key = "fund_filter"
             )
             fund = funds_data[funds_data["options"] == fund_filter]["symbol"].tolist()[0]
@@ -544,11 +544,12 @@ def funds_filter_func(
 
 def etfs_filter_func(
     periods_and_intervals,
-    page_title):
+    page_title,
+    filter_bar):
     etf_data = investpy.etfs.get_etfs()
     etf_data["options"] = etf_data["symbol"] + " - " + etf_data["name"]
     etf_data["country"] = etf_data["country"].str.upper()
-    with st.expander(
+    with filter_bar.expander(
         label = "Market",
         expanded = True
     ):
@@ -557,7 +558,6 @@ def etfs_filter_func(
                 label = "Market",
                 placeholder = "Market",
                 options = sorted(etf_data["country"].unique()),
-                index = 47,
                 key = "market_filter"
             )
             market_button = st.form_submit_button(
@@ -573,7 +573,6 @@ def etfs_filter_func(
                 label = f"ETFs ({market_filter})",
                 placeholder = "ETFs",
                 options = sorted(etf_options),
-                index = 1776,
                 key = "etf_filter"
             )
             etf = etf_data[etf_data["options"] == etf_filter]["symbol"].tolist()[0]
@@ -619,10 +618,11 @@ def etfs_filter_func(
 
 def currency_crosses_filter_func(
     periods_and_intervals,
-    page_title):
+    page_title,
+    filter_bar):
     cc_data = investpy.currency_crosses.get_currency_crosses()
     cc_data["symbol_yf"] = cc_data["base"] + cc_data["second"] + "=X"
-    with st.expander(
+    with filter_bar.expander(
         label = "Market",
         expanded = True
     ):
@@ -632,7 +632,6 @@ def currency_crosses_filter_func(
                 label = f"Currency Cross",
                 placeholder = "Currency Cross",
                 options = sorted(cc_options),
-                index = 1760,
                 key = "index_filter"
             )
             cc = cc_data[cc_data["full_name"] == cc_filter]["symbol_yf"].tolist()[0]
@@ -676,11 +675,12 @@ def currency_crosses_filter_func(
 
 def cryptos_filter_func(
     periods_and_intervals,
-    page_title):
+    page_title,
+    filter_bar):
     crypto_data = investpy.crypto.get_cryptos()
     crypto_data["options"] = crypto_data["symbol"] + " - " + crypto_data["name"]
     crypto_data["symbol_yf"] = crypto_data["symbol"] + "-" + crypto_data["currency"]
-    with st.expander(
+    with filter_bar.expander(
         label = "Market",
         expanded = True
     ):
@@ -689,7 +689,6 @@ def cryptos_filter_func(
                 label = f"Cryptocurrency",
                 placeholder = "Cryptocurrency",
                 options = sorted(crypto_data["options"].unique()),
-                index = 130,
                 key = "crypto_filter"
             )
             crypto = crypto_data[crypto_data["options"] == crypto_filter]["symbol_yf"].tolist()[0]
@@ -731,8 +730,10 @@ def cryptos_filter_func(
         currency
     )
 
-def stocks_filter_func2(periods_and_intervals):
-    with st.form("market_form2"):
+def stocks_filter_func2(
+    periods_and_intervals,
+    filter_bar):
+    with filter_bar.form("market_form2"):
         market_filter = st.selectbox(
             label = "Market",
             placeholder = "Market",
@@ -748,7 +749,7 @@ def stocks_filter_func2(periods_and_intervals):
         )
         if market_button:
             market_filter = st.session_state["market_filter2"]
-    with st.form("search_form2"):
+    with filter_bar.form("search_form2"):
         market_data_yf = pd.json_normalize(
                 json.load(open(f"./data/symbols/{market_filter.lower()}.json", "r")))\
                     .sort_values(by = "symbol")\
@@ -810,12 +811,14 @@ def stocks_filter_func2(periods_and_intervals):
             feature_filter
         )
     
-def indices_filter_func2(periods_and_intervals):
+def indices_filter_func2(
+    periods_and_intervals,
+    filter_bar):
     index_data = investpy.indices.get_indices()
     index_data["options"] = index_data["symbol"] + " - " + index_data["name"]
     index_data["country"] = index_data["country"].str.upper()
     index_data["symbol_yf"] = "^" + index_data["symbol"]
-    with st.expander(
+    with filter_bar.expander(
         label = "Market",
         expanded = True
     ):
@@ -890,11 +893,13 @@ def indices_filter_func2(periods_and_intervals):
         feature_filter
     )
 
-def cryptos_filter_func2(periods_and_intervals):
+def cryptos_filter_func2(
+    periods_and_intervals,
+    filter_bar):
     crypto_data = investpy.crypto.get_cryptos()
     crypto_data["options"] = crypto_data["symbol"] + " - " + crypto_data["name"]
     crypto_data["symbol_yf"] = crypto_data["symbol"] + "-" + crypto_data["currency"]
-    with st.expander(
+    with filter_bar.expander(
         label = "Market",
         expanded = True
     ):
@@ -950,10 +955,12 @@ def cryptos_filter_func2(periods_and_intervals):
         feature_filter
     )
 
-def currency_crosses_filter_func2(periods_and_intervals):
+def currency_crosses_filter_func2(
+    periods_and_intervals,
+    filter_bar):
     cc_data = investpy.currency_crosses.get_currency_crosses()
     cc_data["symbol_yf"] = cc_data["base"] + cc_data["second"] + "=X"
-    with st.expander(
+    with filter_bar.expander(
         label = "Market",
         expanded = True
     ):
@@ -1010,11 +1017,13 @@ def currency_crosses_filter_func2(periods_and_intervals):
         feature_filter
     )
 
-def funds_filter_func2(periods_and_intervals):
+def funds_filter_func2(
+    periods_and_intervals,
+    filter_bar):
     funds_data = investpy.funds.get_funds()
     funds_data["options"] = funds_data["symbol"] + " - " + funds_data["name"]
     funds_data["country"] = funds_data["country"].str.upper()
-    with st.expander(
+    with filter_bar.expander(
         label = "Market",
         expanded = True
     ):
@@ -1086,11 +1095,13 @@ def funds_filter_func2(periods_and_intervals):
         feature_filter
     )
 
-def etfs_filter_func2(periods_and_intervals):
+def etfs_filter_func2(
+    periods_and_intervals,
+    filter_bar):
     etf_data = investpy.etfs.get_etfs()
     etf_data["options"] = etf_data["symbol"] + " - " + etf_data["name"]
     etf_data["country"] = etf_data["country"].str.upper()
-    with st.expander(
+    with filter_bar.expander(
         label = "Market",
         expanded = True
     ):
@@ -1164,10 +1175,12 @@ def etfs_filter_func2(periods_and_intervals):
         feature_filter
     )
 
-def bonds_filter_func2(periods_and_intervals):
+def bonds_filter_func2(
+    periods_and_intervals,
+    filter_bar):
     bond_data = pd.read_json("./data/bonds.json")
     bond_data["options"] = bond_data["Symbol"] + " - " + bond_data["Name"]
-    with st.expander(
+    with filter_bar.expander(
         label = "Market",
         expanded = True
     ):
@@ -1221,10 +1234,12 @@ def bonds_filter_func2(periods_and_intervals):
         feature_filter
     )
 
-def commodities_filter_func2(periods_and_intervals):
+def commodities_filter_func2(
+    periods_and_intervals,
+    filter_bar):
     commodity_data = pd.read_json("./data/commodities.json")
     commodity_data["options"] = commodity_data["Symbol"] + " - " + commodity_data["Name"]
-    with st.expander(
+    with filter_bar.expander(
         label = "Market",
         expanded = True
     ):
@@ -1484,13 +1499,37 @@ def conditional_correlation_matrix(returns, element_filter):
         color_continuous_scale = "RdBu_r")
     return fig
 
-def image_border_radius(image_path, border_radius, page_object = None):
-    with open(image_path, "rb") as img_file:
-        img_base64 = base64.b64encode(img_file.read()).decode()
-    # Create HTML string with the image
-    img_html = f'<img src="data:image/jpeg;base64,{img_base64}" style="border-radius: {border_radius}px; width: 300px;">'
-    # Display the HTML string in Streamlit
-    if page_object == None:
-        st.markdown(img_html, unsafe_allow_html=True)
+def image_border_radius(image_path, border_radius, width, height, page_object = None, is_html = False):
+    if is_html == False:
+        with open(image_path, "rb") as img_file:
+            img_base64 = base64.b64encode(img_file.read()).decode()
+        # Create HTML string with the image
+        img_html = f'<img src="data:image/jpeg;base64,{img_base64}" style="border-radius: {border_radius}px; width: {width}px; height: {height}px">'
+        # Display the HTML string in Streamlit
+        if page_object == None:
+            st.markdown(img_html, unsafe_allow_html=True)
+        else:
+            page_object.markdown(img_html, unsafe_allow_html=True)
     else:
-        page_object.markdown(img_html, unsafe_allow_html=True)
+        # Create HTML string with the image
+        img_html = f'<img src="{image_path}" style="border-radius: {border_radius}px; width: 300px;">'
+        # Display the HTML string in Streamlit
+        if page_object == None:
+            st.markdown(img_html, unsafe_allow_html=True)
+        else:
+            page_object.markdown(img_html, unsafe_allow_html=True)
+
+def create_scrollable_section(content, height="400px"):
+    # Defining the HTML and CSS
+    scrollable_section_html = f"""
+    <div style="
+        overflow-y: scroll;
+        height: {height};
+        border: 1px solid #ccc;
+        padding: 10px;
+        margin: 10px 0;
+        ">
+        {content}
+    </div>
+    """
+    return scrollable_section_html      

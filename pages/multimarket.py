@@ -32,7 +32,8 @@ from functions import (
 
 st.set_page_config(
     page_title = "COELHO Finance | MULTIMARKET",
-    layout = "wide"
+    layout = "wide",
+    initial_sidebar_state = "collapsed"
 )
 
 option_menu()
@@ -40,7 +41,10 @@ option_menu()
 st.title("$$\\large{\\textbf{COELHO Finance | MULTIMARKET}}$$")
 st.caption("Author: Rafael Silva Coelho")
 
-grid_ = grid(4, vertical_align = True)
+grid_ = grid(5, vertical_align = True)
+HOME = grid_.button(
+    label = "$$\\textbf{Home}$$",
+    use_container_width = True)
 UNIMARKET = grid_.button(
     label = "$$\\textbf{UNIMARKET}$$",
     use_container_width = True)
@@ -53,6 +57,8 @@ MULTIMARKET = grid_.button(
 ABOUT_US = grid_.button(
     "$$\\textbf{About Us}$$",
     use_container_width = True)
+if HOME:
+    switch_page("coelho finance")
 if UNIMARKET:
     switch_page("UNIMARKET")
 if UNISTATS:
@@ -63,112 +69,133 @@ if ABOUT_US:
     switch_page("About Us")
 st.divider()
 
+layout = grid([1, 0.2, 3], vertical_align = True)
+filter_bar = layout.container()
+layout.container()
+display = layout.container()
+
 with open("./data/periods_and_intervals.json", "r") as f:
     periods_and_intervals = json.load(f)
 
-with st.sidebar:
-    asset_filter = st.selectbox(
-        label = "Asset type",
-        placeholder = "Asset type",
-        options = [
-            "Stocks",
-            "Indices",
-            "Crypto",
-            "Currency Crosses",
-            "Funds",
-            "ETFs",
-            "Commodities",
-            "Bonds"
-        ],
-        index = 0,
-        key = "investment_filter")
-    if asset_filter == "Stocks":
-        (
-            element,
-            period_filter,
-            interval_filter,
-            element_filter,
-            exchange,
-            quote_type,
-            long_name,
-            short_name,
-            feature_filter
-        ) = stocks_filter_func2(periods_and_intervals)
-    elif asset_filter == "Indices":
-        (
-            element,
-            period_filter,
-            interval_filter,
-            element_filter,
-            exchange,
-            long_name,
-            currency,
-            feature_filter
-        ) = indices_filter_func2(periods_and_intervals)
-    elif asset_filter == "Crypto":
-        (
-            element,
-            period_filter,
-            interval_filter,
-            element_filter,
-            long_name,
-            currency,
-            feature_filter
-        ) = cryptos_filter_func2(periods_and_intervals)
-    elif asset_filter == "Currency Crosses":
-        (
-            element,
-            period_filter,
-            interval_filter,
-            element_filter,
-            long_name,
-            currency,
-            feature_filter
-        ) = currency_crosses_filter_func2(periods_and_intervals)
-    elif asset_filter == "Funds":
-        (
-            element,
-            period_filter,
-            interval_filter,
-            element_filter,
-            exchange,
-            currency,
-            feature_filter
-        ) = funds_filter_func2(periods_and_intervals)
-    elif asset_filter == "ETFs":
-        (
-            element,
-            period_filter,
-            interval_filter,
-            element_filter,
-            exchange,
-            long_name,
-            currency,
-            feature_filter
-        ) = etfs_filter_func2(periods_and_intervals)
-    elif asset_filter == "Bonds":
-        (
-            element,
-            period_filter,
-            interval_filter,
-            element_filter,
-            long_name,
-            feature_filter
-        ) = bonds_filter_func2(periods_and_intervals)
-    elif asset_filter == "Commodities":
-        (
-            element,
-            period_filter,
-            interval_filter,
-            element_filter,
-            long_name,
-            feature_filter
-        ) = commodities_filter_func2(periods_and_intervals)
-    else:
-        st.write("$$\\textbf{UNDER CONSTRUCTION}$$")
-        st.stop()
+filter_bar.latex("\\textbf{Filters}")
+asset_filter = filter_bar.selectbox(
+    label = "Asset type",
+    placeholder = "Asset type",
+    options = [
+        "Stocks",
+        "Indices",
+        "Crypto",
+        "Currency Crosses",
+        "Funds",
+        "ETFs",
+        "Commodities",
+        "Bonds"
+    ],
+    index = 0,
+    key = "investment_filter")
+if asset_filter == "Stocks":
+    (
+        element,
+        period_filter,
+        interval_filter,
+        element_filter,
+        exchange,
+        quote_type,
+        long_name,
+        short_name,
+        feature_filter
+    ) = stocks_filter_func2(
+        periods_and_intervals,
+        filter_bar)
+elif asset_filter == "Indices":
+    (
+        element,
+        period_filter,
+        interval_filter,
+        element_filter,
+        exchange,
+        long_name,
+        currency,
+        feature_filter
+    ) = indices_filter_func2(
+        periods_and_intervals,
+        filter_bar)
+elif asset_filter == "Crypto":
+    (
+        element,
+        period_filter,
+        interval_filter,
+        element_filter,
+        long_name,
+        currency,
+        feature_filter
+    ) = cryptos_filter_func2(
+        periods_and_intervals,
+        filter_bar)
+elif asset_filter == "Currency Crosses":
+    (
+        element,
+        period_filter,
+        interval_filter,
+        element_filter,
+        long_name,
+        currency,
+        feature_filter
+    ) = currency_crosses_filter_func2(
+        periods_and_intervals,
+        filter_bar)
+elif asset_filter == "Funds":
+    (
+        element,
+        period_filter,
+        interval_filter,
+        element_filter,
+        exchange,
+        currency,
+        feature_filter
+    ) = funds_filter_func2(
+        periods_and_intervals,
+        filter_bar)
+elif asset_filter == "ETFs":
+    (
+        element,
+        period_filter,
+        interval_filter,
+        element_filter,
+        exchange,
+        long_name,
+        currency,
+        feature_filter
+    ) = etfs_filter_func2(
+    periods_and_intervals,
+    filter_bar)
+elif asset_filter == "Bonds":
+    (
+        element,
+        period_filter,
+        interval_filter,
+        element_filter,
+        long_name,
+        feature_filter
+    ) = bonds_filter_func2(
+        periods_and_intervals,
+        filter_bar)
+elif asset_filter == "Commodities":
+    (
+        element,
+        period_filter,
+        interval_filter,
+        element_filter,
+        long_name,
+        feature_filter
+    ) = commodities_filter_func2(
+        periods_and_intervals,
+        filter_bar)
+else:
+    st.write("$$\\textbf{UNDER CONSTRUCTION}$$")
+    st.stop()
 
-main_tabs = st.tabs([
+main_tabs = display.tabs([
         "$$\\textbf{MULTIMARKET}$$",
         "$$\\textbf{VOLATILITY}$$",
         "$$\\textbf{ASSET ALLOCATION}$$",
@@ -320,19 +347,16 @@ with main_tabs[2]: #ASSET ALLOCATION TAB
         st.write("$$\\underline{\\huge{\\textbf{Efficient Frontier \& Risk Aversion}}}$$")
         try:
             fig1, fig2 = efficient_frontier2(multidata_yf, feature_filter, element)
-            cols = st.columns(2)
-            with cols[0]:
-                st.write("$$\\Large{\\textbf{Risk-Aversion Allocation}}$$")
-                st.pyplot(
-                    fig1,
-                    use_container_width = True
-                )
-            with cols[1]:
-                st.write("$$\\Large{\\textbf{Efficient Frontier (Convex Optimization)}}$$")
-                st.pyplot(
-                    fig2,
-                    use_container_width = True
-                )
+            st.write("$$\\Large{\\textbf{Risk-Aversion Allocation}}$$")
+            st.pyplot(
+                fig1,
+                use_container_width = True
+            )
+            st.write("$$\\Large{\\textbf{Efficient Frontier (Convex Optimization)}}$$")
+            st.pyplot(
+                fig2,
+                use_container_width = True
+            )
         except:
             st.write("No informations.")
 with main_tabs[3]: #NEWS TAB

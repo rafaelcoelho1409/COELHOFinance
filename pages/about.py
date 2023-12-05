@@ -6,14 +6,18 @@ from functions import option_menu, image_border_radius
 
 st.set_page_config(
     page_title = "COELHO Finance - About Us",
-    layout = "wide"
+    layout = "wide",
+    initial_sidebar_state = "collapsed"
 )
 
 option_menu()
 
 st.title("$$\\large{\\textbf{About Us}}$$")
 
-grid_ = grid(4, vertical_align = True)
+grid_ = grid(5, vertical_align = True)
+HOME = grid_.button(
+    label = "$$\\textbf{Home}$$",
+    use_container_width = True)
 UNIMARKET = grid_.button(
     label = "$$\\textbf{UNIMARKET}$$",
     use_container_width = True)
@@ -26,6 +30,8 @@ MULTIMARKET = grid_.button(
 ABOUT_US = grid_.button(
     "$$\\textbf{About Us}$$",
     use_container_width = True)
+if HOME:
+    switch_page("coelho finance")
 if UNIMARKET:
     switch_page("UNIMARKET")
 if UNISTATS:
@@ -42,7 +48,7 @@ with st.expander(
 ):
     st.write("$$\\underline{\\Large{\\textbf{Author}}}$$")
     grid1 = grid([1, 2], vertical_align = True)
-    image_border_radius("assets/rafael_coelho_1.jpeg", 20, grid1)
+    image_border_radius("assets/rafael_coelho_1.jpeg", 20, 265*1.5, 325*1.5, grid1)
     container1 = grid1.container()
     container1.markdown("""<div style='font-size:25px; text-align: center'>
     Rafael Coelho is a Brazilian Mathematics student 
@@ -52,9 +58,10 @@ with st.expander(
     Computer Vision, Reinforcement Learning, NLP and others.<br>
     Recently, he worked in one of the Big Four companies for over a year.</div>
     """, unsafe_allow_html = True)
-    test = container1.columns(3)
-    with test[0]:
-        st.markdown("""
+    #test = container1.columns(3)
+    #with test[0]:
+    buttons = container1.columns(3)
+    buttons[0].markdown("""
     <div>
     <h1>
     <a 
@@ -64,8 +71,8 @@ with st.expander(
     </a>
     </h1>
     </div>""", unsafe_allow_html = True)
-    with test[1]:
-        st.markdown("""
+    #with test[1]:
+    buttons[1].markdown("""
     <div>
     <h1>
     <a 
@@ -75,8 +82,8 @@ with st.expander(
     </a>
     </h1>
     </div>""", unsafe_allow_html = True)
-    with test[2]:
-        st.markdown("""
+    #with test[2]:
+    buttons[2].markdown("""
     <div>
     <h1>
     <a
@@ -86,11 +93,6 @@ with st.expander(
     </a>
     </h1>
     </div>""", unsafe_allow_html = True)
+####################################
 
 
-st.divider()
-st.markdown("""<div style='font-size:25px'>
-<h3>NEXT STEPS</h3>
-<b>- Advanced Statistics</b><br>
-<b>- Machine Learning predictions:</b> predictions to help you to predict if stock prices and indexes
-will go up or down""", unsafe_allow_html = True)
