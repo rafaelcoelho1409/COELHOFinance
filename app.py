@@ -31,6 +31,9 @@ UNISTATS = first_column.button(
 MULTIMARKET = first_column.button(
     "$$\\textbf{MULTIMARKET}$$",
     use_container_width = True)
+BACKTESTING = first_column.button(
+    "$$\\textbf{Backtesting}$$",
+    use_container_width = True)
 ABOUT_US = first_column.button(
     "$$\\textbf{About Us}$$",
     use_container_width = True)
@@ -39,7 +42,9 @@ if UNIMARKET:
 if UNISTATS:
     switch_page("UNISTATS")
 if MULTIMARKET:
-    switch_page("MULTIMARKET")  
+    switch_page("MULTIMARKET")
+if BACKTESTING:
+    switch_page("Backtesting")  
 if ABOUT_US:
     switch_page("About Us")
 

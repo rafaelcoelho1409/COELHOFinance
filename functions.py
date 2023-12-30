@@ -12,7 +12,9 @@ import base64
 #ANOMALY DETECTION
 from adtk.data import validate_series
 from streamlit_extras.row import row
+from streamlit_extras.grid import grid
 from streamlit_extras.metric_cards import style_metric_cards
+from streamlit_extras.switch_page_button import switch_page
 from st_pages import show_pages, Page, Section, add_indentation
 #MODELS
 from arch import arch_model
@@ -198,6 +200,7 @@ def option_menu():
         Page("pages/unimarket.py", "UNIMARKET"),
         Page("pages/unistats.py", "UNISTATS"),
         Page("pages/multimarket.py", "MULTIMARKET"),
+        Page("pages/backtesting.py", "Backtesting"),
         Page("pages/about.py", "About Us", in_section = False),
     ])
     add_indentation()
@@ -1532,4 +1535,38 @@ def create_scrollable_section(content, height="400px"):
         {content}
     </div>
     """
-    return scrollable_section_html      
+    return scrollable_section_html    
+
+def page_buttons():
+    grid_ = grid(6, vertical_align = True)
+    HOME = grid_.button(
+        label = "$$\\textbf{Home}$$",
+        use_container_width = True)
+    UNIMARKET = grid_.button(
+        label = "$$\\textbf{UNIMARKET}$$",
+        use_container_width = True)
+    UNISTATS = grid_.button(
+        label = "$$\\textbf{UNISTATS}$$",
+        use_container_width = True)
+    MULTIMARKET = grid_.button(
+        "$$\\textbf{MULTIMARKET}$$",
+        use_container_width = True)
+    BACKTESTING = grid_.button(
+        "$$\\textbf{Backtesting}$$",
+        use_container_width = True)
+    ABOUT_US = grid_.button(
+        "$$\\textbf{About Us}$$",
+        use_container_width = True)
+    if HOME:
+        switch_page("coelho finance")
+    if UNIMARKET:
+        switch_page("UNIMARKET")
+    if UNISTATS:
+        switch_page("UNISTATS")
+    if MULTIMARKET:
+        switch_page("MULTIMARKET")  
+    if BACKTESTING:
+        switch_page("Backtesting")  
+    if ABOUT_US:
+        switch_page("About Us")
+    st.divider()  

@@ -14,7 +14,7 @@ option_menu()
 
 st.title("$$\\large{\\textbf{About Us}}$$")
 
-grid_ = grid(5, vertical_align = True)
+grid_ = grid(6, vertical_align = True)
 HOME = grid_.button(
     label = "$$\\textbf{Home}$$",
     use_container_width = True)
@@ -27,6 +27,9 @@ UNISTATS = grid_.button(
 MULTIMARKET = grid_.button(
     "$$\\textbf{MULTIMARKET}$$",
     use_container_width = True)
+BACKTESTING = grid_.button(
+    "$$\\textbf{Backtesting}$$",
+    use_container_width = True)
 ABOUT_US = grid_.button(
     "$$\\textbf{About Us}$$",
     use_container_width = True)
@@ -37,7 +40,9 @@ if UNIMARKET:
 if UNISTATS:
     switch_page("UNISTATS")
 if MULTIMARKET:
-    switch_page("MULTIMARKET")  
+    switch_page("MULTIMARKET") 
+if BACKTESTING:
+    switch_page("Backtesting")
 if ABOUT_US:
     switch_page("About Us")
 st.divider()

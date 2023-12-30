@@ -17,6 +17,7 @@ from streamlit_extras.metric_cards import style_metric_cards
 from functions import (
     get_multimarket,
     get_news,
+    page_buttons,
     option_menu,
     stocks_filter_func2,
     indices_filter_func2,
@@ -45,33 +46,7 @@ container1.title("$$\\large{\\textbf{COELHO Finance | MULTIMARKET}}$$")
 container1.caption("Author: Rafael Silva Coelho")
 image_border_radius("./assets/coelho_finance_logo.png", 15, 60, 60, grid_title)
 
-grid_ = grid(5, vertical_align = True)
-HOME = grid_.button(
-    label = "$$\\textbf{Home}$$",
-    use_container_width = True)
-UNIMARKET = grid_.button(
-    label = "$$\\textbf{UNIMARKET}$$",
-    use_container_width = True)
-UNISTATS = grid_.button(
-    label = "$$\\textbf{UNISTATS}$$",
-    use_container_width = True)
-MULTIMARKET = grid_.button(
-    "$$\\textbf{MULTIMARKET}$$",
-    use_container_width = True)
-ABOUT_US = grid_.button(
-    "$$\\textbf{About Us}$$",
-    use_container_width = True)
-if HOME:
-    switch_page("coelho finance")
-if UNIMARKET:
-    switch_page("UNIMARKET")
-if UNISTATS:
-    switch_page("UNISTATS")
-if MULTIMARKET:
-    switch_page("MULTIMARKET")  
-if ABOUT_US:
-    switch_page("About Us")
-st.divider()
+page_buttons()
 
 layout = grid([1, 0.2, 3], vertical_align = True)
 filter_bar = layout.container()
