@@ -212,7 +212,7 @@ with main_tabs[0]: #UNIMARKET TAB
         expanded = True
     ):
         try:
-            checkboxes_grid = grid(6, vertical_align = True)
+            checkboxes_grid = grid(5, vertical_align = True)
             checkboxes_grid.markdown("**OHLC filters**")
             fig = go.Figure()
             fig.add_trace(
@@ -224,7 +224,7 @@ with main_tabs[0]: #UNIMARKET TAB
                     close = data_yf["Close"],
                 )
             )
-            for x in ["Open", "High", "Low", "Close", "Volume"]:
+            for x in ["Open", "High", "Low", "Close"]:
                 if checkboxes_grid.checkbox(x):
                     fig.add_trace(
                         go.Scatter(

@@ -9,6 +9,11 @@ import numpy as np
 import cvxpy as cp
 import plotly.express as px
 import base64
+import requests
+import vectorbt as vbt
+from dateutil.relativedelta import relativedelta
+import ipywidgets as widgets
+import imageio
 #ANOMALY DETECTION
 from adtk.data import validate_series
 from streamlit_extras.row import row
@@ -18,6 +23,9 @@ from streamlit_extras.switch_page_button import switch_page
 from st_pages import show_pages, Page, Section, add_indentation
 #MODELS
 from arch import arch_model
+
+with open("./data/periods_and_intervals_binance.json", "r") as f:
+    intervals_binance = json.load(f)
 
 @st.cache_resource
 def get_unimarket(
@@ -1296,6 +1304,85 @@ def commodities_filter_func2(
         feature_filter
     )
 
+def binance_filter_func(filter_bar):
+    with filter_bar.expander(
+        label = "Cryptocurrencies",
+        expanded = True
+    ):
+        symbol = st.selectbox(
+            label = "Symbol",
+            options = sorted(binance_symbols()),
+            index = 510,
+            key = "symbol1")
+        feature = st.selectbox(
+            label = "Feature",
+            options = [
+                'Open', 
+                'High', 
+                'Low', 
+                'Close', 
+                'Volume'],
+            index = 3
+        )
+        interval = st.selectbox(
+            label = "Interval",
+            options = intervals_binance[0]["interval"].keys(),
+            index = 12
+        )
+        start_date = st.date_input(
+            label = "Start date",
+            value = dt.datetime.now() - dt.timedelta(days = 30),
+            min_value = dt.datetime.now() - relativedelta(years = 10),
+            max_value = dt.datetime.now()
+        )
+        start_hour = st.time_input(
+            label = "Start hour",
+            value = dt.time(00, 00)
+        )
+        end_date = st.date_input(
+            label = "End date",
+            value = dt.datetime.now(),
+            min_value = dt.datetime.now() - relativedelta(years = 10),
+            max_value = dt.datetime.now()
+        )
+        end_hour = st.time_input(
+            label = "End hour",
+            value = dt.time(00, 00)
+        )
+        return (
+            symbol,
+            start_date,
+            start_hour,
+            end_date,
+            end_hour,
+            feature,
+            interval
+        )
+    
+@st.cache_resource
+def get_binance_data(
+    symbol,
+    start_date,
+    start_hour,
+    end_date,
+    end_hour,
+    interval
+):
+    data = vbt.BinanceData.download(
+        symbols = symbol,
+        start = f'{start_date} {start_hour} UTC',
+        end = f'{end_date} {end_hour} UTC',
+        interval = intervals_binance[0]["interval"][interval]
+    )
+    return data
+    
+@st.cache_resource
+def binance_symbols():
+    url = "https://api.binance.com/api/v3/exchangeInfo"
+    data = requests.get(url).json()
+    symbols = [symbol['symbol'] for symbol in data['symbols']]
+    return symbols
+
 @st.cache_resource
 def simulate_gbm(s_0, mu, sigma, n_sims, T, N, random_seed = 42):
     np.random.seed(random_seed)
@@ -1570,3 +1657,4 @@ def page_buttons():
     if ABOUT_US:
         switch_page("About Us")
     st.divider()  
+
