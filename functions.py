@@ -207,7 +207,7 @@ def option_menu():
         Page("pages/unimarket.py", "UNIMARKET"),
         Page("pages/unistats.py", "UNISTATS"),
         Page("pages/multimarket.py", "MULTIMARKET"),
-        Page("pages/backtesting.py", "Backtesting"),
+        #Page("pages/backtesting.py", "Backtesting"),
         Page("pages/about.py", "About Us", in_section = False),
     ])
     add_indentation()
@@ -1686,7 +1686,7 @@ def create_scrollable_section(content, height="400px"):
     return scrollable_section_html    
 
 def page_buttons():
-    grid_ = grid(6, vertical_align = True)
+    grid_ = grid(5, vertical_align = True)
     HOME = grid_.button(
         label = "$$\\textbf{Home}$$",
         use_container_width = True)
@@ -1699,9 +1699,9 @@ def page_buttons():
     MULTIMARKET = grid_.button(
         "$$\\textbf{MULTIMARKET}$$",
         use_container_width = True)
-    BACKTESTING = grid_.button(
-        "$$\\textbf{Backtesting}$$",
-        use_container_width = True)
+    #BACKTESTING = grid_.button(
+    #    "$$\\textbf{Backtesting}$$",
+    #    use_container_width = True)
     ABOUT_US = grid_.button(
         "$$\\textbf{About Us}$$",
         use_container_width = True)
@@ -1713,8 +1713,8 @@ def page_buttons():
         switch_page("UNISTATS")
     if MULTIMARKET:
         switch_page("MULTIMARKET")  
-    if BACKTESTING:
-        switch_page("Backtesting")  
+    #if BACKTESTING:
+    #    switch_page("Backtesting")  
     if ABOUT_US:
         switch_page("About Us")
     st.divider()  

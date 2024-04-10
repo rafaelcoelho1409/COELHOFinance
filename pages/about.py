@@ -14,7 +14,7 @@ option_menu()
 
 st.title("$$\\large{\\textbf{About Us}}$$")
 
-grid_ = grid(6, vertical_align = True)
+grid_ = grid(5, vertical_align = True)
 HOME = grid_.button(
     label = "$$\\textbf{Home}$$",
     use_container_width = True)
@@ -27,9 +27,9 @@ UNISTATS = grid_.button(
 MULTIMARKET = grid_.button(
     "$$\\textbf{MULTIMARKET}$$",
     use_container_width = True)
-BACKTESTING = grid_.button(
-    "$$\\textbf{Backtesting}$$",
-    use_container_width = True)
+#BACKTESTING = grid_.button(
+#    "$$\\textbf{Backtesting}$$",
+#    use_container_width = True)
 ABOUT_US = grid_.button(
     "$$\\textbf{About Us}$$",
     use_container_width = True)
@@ -41,8 +41,8 @@ if UNISTATS:
     switch_page("UNISTATS")
 if MULTIMARKET:
     switch_page("MULTIMARKET") 
-if BACKTESTING:
-    switch_page("Backtesting")
+#if BACKTESTING:
+#    switch_page("Backtesting")
 if ABOUT_US:
     switch_page("About Us")
 st.divider()
@@ -64,41 +64,26 @@ with st.expander(
     Computer Vision, Reinforcement Learning, NLP and others.<br><br>
     Recently, he worked in one of the Big Four companies for over a year.</div>
     """, unsafe_allow_html = True)
-    #test = container1.columns(3)
-    #with test[0]:
+    container1.divider()
     buttons = container1.columns(3)
-    buttons[0].markdown("""
-    <div>
-    <h1>
-    <a 
-        style='text-align:center;'
-        href='https://rafaelcoelho.streamlit.app/'>
-    Portfolio
-    </a>
-    </h1>
-    </div>""", unsafe_allow_html = True)
-    #with test[1]:
-    buttons[1].markdown("""
-    <div>
-    <h1>
-    <a 
-        style='text-align:center;'
-        href='https://www.linkedin.com/in/rafaelcoelho1409/'>
-    LinkedIn
-    </a>
-    </h1>
-    </div>""", unsafe_allow_html = True)
-    #with test[2]:
-    buttons[2].markdown("""
-    <div>
-    <h1>
-    <a
-        style='text-align:center;'
-        href='https://github.com/rafaelcoelho1409/'>
-    GitHub
-    </a>
-    </h1>
-    </div>""", unsafe_allow_html = True)
+    buttons[0].link_button(
+        "Portfolio",
+        "https://rafaelcoelho.streamlit.app/",
+        type = "primary",
+        use_container_width = True
+    )
+    buttons[1].link_button(
+        "LinkedIn",
+        "https://www.linkedin.com/in/rafaelcoelho1409/",
+        type = "primary",
+        use_container_width = True
+    )
+    buttons[2].link_button(
+        "GitHub",
+        "https://github.com/rafaelcoelho1409/",
+        type = "primary",
+        use_container_width = True
+    )
 ####################################
 
 
