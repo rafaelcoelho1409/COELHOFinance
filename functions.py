@@ -12,8 +12,7 @@ import base64
 import requests
 import vectorbt as vbt
 from dateutil.relativedelta import relativedelta
-import ipywidgets as widgets
-import imageio
+import ccxt
 #ANOMALY DETECTION
 from adtk.data import validate_series
 from streamlit_extras.row import row
@@ -1304,15 +1303,15 @@ def commodities_filter_func2(
         feature_filter
     )
 
-def binance_filter_func(filter_bar):
+def binance_filter_func(filter_bar, _binance_symbols):
     with filter_bar.expander(
         label = "Cryptocurrencies",
         expanded = True
     ):
         symbol = st.selectbox(
             label = "Symbol",
-            options = sorted(binance_symbols()),
-            index = 510,
+            options = _binance_symbols,
+            index = _binance_symbols.index("BTCUSDT"),
             key = "symbol1")
         feature = st.selectbox(
             label = "Feature",
@@ -1324,14 +1323,9 @@ def binance_filter_func(filter_bar):
                 'Volume'],
             index = 3
         )
-        interval = st.selectbox(
-            label = "Interval",
-            options = intervals_binance[0]["interval"].keys(),
-            index = 12
-        )
         start_date = st.date_input(
             label = "Start date",
-            value = dt.datetime.now() - dt.timedelta(days = 30),
+            value = dt.datetime.now() - relativedelta(years = 1),
             min_value = dt.datetime.now() - relativedelta(years = 10),
             max_value = dt.datetime.now()
         )
@@ -1342,7 +1336,7 @@ def binance_filter_func(filter_bar):
         end_date = st.date_input(
             label = "End date",
             value = dt.datetime.now(),
-            min_value = dt.datetime.now() - relativedelta(years = 10),
+            min_value = start_date,
             max_value = dt.datetime.now()
         )
         end_hour = st.time_input(
@@ -1356,7 +1350,55 @@ def binance_filter_func(filter_bar):
             end_date,
             end_hour,
             feature,
-            interval
+        )
+    
+def ccxt_filter_func(filter_bar, _ccxt_symbols):
+    with filter_bar.expander(
+        label = "Cryptocurrencies",
+        expanded = True
+    ):
+        symbol = st.selectbox(
+            label = "Symbol",
+            options = _ccxt_symbols,
+            index = _ccxt_symbols.index("BTC/USDT:USDT"),
+            key = "symbol1")
+        feature = st.selectbox(
+            label = "Feature",
+            options = [
+                'Open', 
+                'High', 
+                'Low', 
+                'Close', 
+                'Volume'],
+            index = 3
+        )
+        start_date = st.date_input(
+            label = "Start date",
+            value = dt.datetime.now() - relativedelta(years = 1),
+            min_value = dt.datetime.now() - relativedelta(years = 10),
+            max_value = dt.datetime.now()
+        )
+        start_hour = st.time_input(
+            label = "Start hour",
+            value = dt.time(00, 00)
+        )
+        end_date = st.date_input(
+            label = "End date",
+            value = dt.datetime.now(),
+            min_value = start_date,
+            max_value = dt.datetime.now()
+        )
+        end_hour = st.time_input(
+            label = "End hour",
+            value = dt.time(00, 00)
+        )
+        return (
+            symbol,
+            start_date,
+            start_hour,
+            end_date,
+            end_hour,
+            feature,
         )
     
 @st.cache_resource
@@ -1366,13 +1408,27 @@ def get_binance_data(
     start_hour,
     end_date,
     end_hour,
-    interval
 ):
     data = vbt.BinanceData.download(
         symbols = symbol,
         start = f'{start_date} {start_hour} UTC',
         end = f'{end_date} {end_hour} UTC',
-        interval = intervals_binance[0]["interval"][interval]
+        interval = "1d"
+    )
+    return data
+
+@st.cache_resource
+def get_ccxt_data(
+    symbol,
+    start_date,
+    start_hour,
+    end_date,
+    end_hour,
+):
+    data = vbt.CCXTData.download(
+        symbols = symbol,
+        start = f'{start_date} {start_hour} UTC',
+        end = f'{end_date} {end_hour} UTC',
     )
     return data
     
@@ -1381,6 +1437,15 @@ def binance_symbols():
     url = "https://api.binance.com/api/v3/exchangeInfo"
     data = requests.get(url).json()
     symbols = [symbol['symbol'] for symbol in data['symbols']]
+    return symbols
+
+@st.cache_resource
+def ccxt_symbols():
+    exchange_id = 'binance'
+    exchange_class = getattr(ccxt, exchange_id)
+    exchange = exchange_class()
+    markets = exchange.load_markets()
+    symbols = list(markets.keys())  # Gets all available symbols/pairs
     return symbols
 
 @st.cache_resource
@@ -1658,3 +1723,46 @@ def page_buttons():
         switch_page("About Us")
     st.divider()  
 
+
+#BACKTESTING FUNCTIONS
+def get_expectancy(total_return_by_type, level_name, init_cash):
+    grouped = total_return_by_type.groupby(level_name, axis=0)
+    win_rate = grouped.apply(lambda x: (x > 0).mean())
+    avg_win = grouped.apply(lambda x: init_cash * x[x > 0].mean()).fillna(0)
+    avg_loss = grouped.apply(lambda x: init_cash * x[x < 0].mean()).fillna(0)
+    return win_rate * avg_win - (1 - win_rate) * np.abs(avg_loss)
+
+def bin_return(total_return_by_type, bins):
+    classes = pd.cut(total_return_by_type['Holding'], bins=bins, right=True)
+    new_level = pd.Index(np.array(classes.apply(lambda x: x.right)), name='bin_right')
+    return total_return_by_type.vbt.stack_index(new_level, axis=0)
+
+def roll_in_and_out_samples(price, **kwargs):
+    return price.vbt.rolling_split(**kwargs)
+
+def simulate_holding(price, **kwargs):
+    pf = vbt.Portfolio.from_holding(price, **kwargs)
+    return pf.sharpe_ratio()
+
+def simulate_all_params(price, windows, **kwargs):
+    fast_ma, slow_ma = vbt.MA.run_combs(price, windows, r=2, short_names=['fast', 'slow'])
+    entries = fast_ma.ma_crossed_above(slow_ma)
+    exits = fast_ma.ma_crossed_below(slow_ma)
+    pf = vbt.Portfolio.from_signals(price, entries, exits, **kwargs)
+    return pf.sharpe_ratio()
+
+def get_best_index(performance, higher_better=True):
+    if higher_better:
+        return performance[performance.groupby('split_idx').idxmax()].index
+    return performance[performance.groupby('split_idx').idxmin()].index
+
+def get_best_params(best_index, level_name):
+    return best_index.get_level_values(level_name).to_numpy()
+
+def simulate_best_params(price, best_fast_windows, best_slow_windows, **kwargs):
+    fast_ma = vbt.MA.run(price, window=best_fast_windows, per_column=True)
+    slow_ma = vbt.MA.run(price, window=best_slow_windows, per_column=True)
+    entries = fast_ma.ma_crossed_above(slow_ma)
+    exits = fast_ma.ma_crossed_below(slow_ma)
+    pf = vbt.Portfolio.from_signals(price, entries, exits, **kwargs)
+    return pf.sharpe_ratio()

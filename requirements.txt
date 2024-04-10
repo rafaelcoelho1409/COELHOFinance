@@ -21,3 +21,6 @@ yfinance==0.2.26
 ipython==8.18.0
 vectorbt==0.26.0
 python-binance==1.0.19
+stqdm==0.0.5
+nbformat==5.10.4
+ccxt==4.2.88
