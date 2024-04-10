@@ -1310,8 +1310,8 @@ def binance_filter_func(filter_bar, _binance_symbols):
     ):
         symbol = st.selectbox(
             label = "Symbol",
-            options = _binance_symbols,
-            index = _binance_symbols.index("BTCUSDT"),
+            options = sorted(_binance_symbols),
+            index = sorted(_binance_symbols).index("BTCUSDT"),
             key = "symbol1")
         feature = st.selectbox(
             label = "Feature",
@@ -1434,10 +1434,8 @@ def get_ccxt_data(
     
 @st.cache_resource
 def binance_symbols():
-    url = "https://api.binance.com/api/v3/exchangeInfo"
-    data = requests.get(url).json()
-    st.write(data)
-    symbols = [symbol['symbol'] for symbol in data['symbols']]
+    with open("./data/binance_symbols.json", "r") as f:
+        symbols = json.load(f)
     return symbols
 
 @st.cache_resource
