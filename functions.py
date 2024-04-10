@@ -1436,6 +1436,7 @@ def get_ccxt_data(
 def binance_symbols():
     url = "https://api.binance.com/api/v3/exchangeInfo"
     data = requests.get(url).json()
+    st.write(data)
     symbols = [symbol['symbol'] for symbol in data['symbols']]
     return symbols
 
