@@ -1359,8 +1359,8 @@ def ccxt_filter_func(filter_bar, _ccxt_symbols):
     ):
         symbol = st.selectbox(
             label = "Symbol",
-            options = _ccxt_symbols,
-            index = _ccxt_symbols.index("BTC/USDT:USDT"),
+            options = sorted(_ccxt_symbols),
+            index = sorted(_ccxt_symbols).index("BTC/USDT:USDT"),
             key = "symbol1")
         feature = st.selectbox(
             label = "Feature",
@@ -1440,11 +1440,8 @@ def binance_symbols():
 
 @st.cache_resource
 def ccxt_symbols():
-    exchange_id = 'binance'
-    exchange_class = getattr(ccxt, exchange_id)
-    exchange = exchange_class()
-    markets = exchange.load_markets()
-    symbols = list(markets.keys())  # Gets all available symbols/pairs
+    with open("./data/ccxt_symbols.json", "r") as f:
+        symbols = json.load(f)
     return symbols
 
 @st.cache_resource
