@@ -5,7 +5,8 @@ from streamlit_extras.grid import grid
 from functions import (
     option_menu, 
     image_border_radius,
-    create_scrollable_section)
+    create_scrollable_section,
+    image_carousel)
 
 st.set_page_config(
     page_title = "COELHO Finance",
@@ -48,13 +49,10 @@ if MULTIMARKET:
 if ABOUT_US:
     switch_page("About Us")
 
-first_column.info("""
-This tool provides information for general purposes and should not be taken as investment advice. 
-It doesn't account for individual financial circumstances or goals. 
-\nUsers should make investment decisions based on their own financial needs and risk tolerance, 
-and consult with a professional advisor. Past performance of securities or strategies 
-doesn't guarantee future results. The tool's creators are not responsible for any 
-financial decisions or losses resulting from its use.""")
+with first_column:
+    image_carousel([
+        f"assets/coelhofinance{x:0>2}.png" for x in range(1, 11)
+    ])
 
 second_column.latex("\\Huge{\\textbf{COELHO Finance}}")
 header = """
@@ -92,8 +90,6 @@ final_content = """
 COELHO Finance is under constant development and is going to have more tools in the near future, 
 such as AI-based tools that will help you to take the best decisions in the financial market.
 </b></h3></div>"""
-
-
 # Combine all content
 combined_content = "<hr>".join([
     header,
@@ -106,15 +102,22 @@ combined_content = "<hr>".join([
 scrollable_section = create_scrollable_section(combined_content, height="750px")
 # Display the scrollable section
 second_column.markdown(scrollable_section, unsafe_allow_html=True)
+second_column.info("""
+This tool provides information for general purposes and should not be taken as investment advice. 
+It doesn't account for individual financial circumstances or goals. 
+\nUsers should make investment decisions based on their own financial needs and risk tolerance, 
+and consult with a professional advisor. Past performance of securities or strategies 
+doesn't guarantee future results. The tool's creators are not responsible for any 
+financial decisions or losses resulting from its use.""")
 
-with st.expander(
-    label = "COELHO Finance",
-    expanded = True
-):
-    cols1 = grid(5)
-    cols2 = grid(5)
-    for i in range(1, 6):
-        cols1.image(f"assets/coelhofinance{i:0>2}.png")
-    for i in range(6, 11):
-        cols2.image(f"assets/coelhofinance{i:0>2}.png")
-st.divider()
+#with st.expander(
+#    label = "COELHO Finance",
+#    expanded = True
+#):
+#    cols1 = grid(5)
+#    cols2 = grid(5)
+#    for i in range(1, 6):
+#        cols1.image(f"assets/coelhofinance{i:0>2}.png")
+#    for i in range(6, 11):
+#        cols2.image(f"assets/coelhofinance{i:0>2}.png")
+#st.divider()

@@ -13,6 +13,7 @@ import requests
 import vectorbt as vbt
 from dateutil.relativedelta import relativedelta
 import ccxt
+import streamfy as sy
 #ANOMALY DETECTION
 from adtk.data import validate_series
 from streamlit_extras.row import row
@@ -25,6 +26,15 @@ from arch import arch_model
 
 with open("./data/periods_and_intervals_binance.json", "r") as f:
     intervals_binance = json.load(f)
+
+def image_carousel(images):
+    # Convert local image paths to displayable format
+    image_urls = [f"data:image/jpg;base64,{base64.b64encode(open(image, 'rb').read()).decode()}" for image in images]
+    # Use the Streamfy component for the image carousel
+    image_carousel = sy.carousel(
+        items = image_urls
+    )
+    return image_carousel
 
 @st.cache_resource
 def get_unimarket(

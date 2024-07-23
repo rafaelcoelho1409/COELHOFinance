@@ -24,3 +24,4 @@ python-binance==1.0.19
 stqdm==0.0.5
 nbformat==5.10.4
 ccxt==4.2.88
+streamfy==0.3.5
